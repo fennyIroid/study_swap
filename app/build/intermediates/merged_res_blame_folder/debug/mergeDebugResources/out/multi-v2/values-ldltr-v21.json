@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.studyswap.mobile.app-mergeDebugResources-69:/values-ldltr-v21/values-ldltr-v21.xml",
+            "map": [
+                {
+                    "source": "/Users/imac/.gradle/caches/8.9/transforms/c9a25af5674441d5b7b316bef9134c4a/transformed/appcompat-1.6.1/res/values-ldltr-v21/values-ldltr-v21.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "112",
+                        "endOffsets": "163"
+                    }
+                }
+            ]
+        }
+    ]
+}

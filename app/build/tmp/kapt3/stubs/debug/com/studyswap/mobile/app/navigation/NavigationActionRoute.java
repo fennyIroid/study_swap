@@ -1,0 +1,9 @@
+package com.studyswap.mobile.app.navigation;
+
+@kotlin.Metadata(mv = {1, 9, 0}, k = 1, xi = 48, d1 = {"\u0000<\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000b\n\u0000\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0002\u0010\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\bv\u0018\u00002\u00020\u0001J$\u0010\u0002\u001a\u00020\u00032\u0006\u0010\u0004\u001a\u00020\u00052\u0012\u0010\u0006\u001a\u000e\u0012\u0004\u0012\u00020\u0001\u0012\u0004\u0012\u00020\b0\u0007H&\u0082\u0001\u0007\t\n\u000b\f\r\u000e\u000f\u00a8\u0006\u0010"}, d2 = {"Lcom/studyswap/mobile/app/navigation/NavigationActionRoute;", "Lcom/studyswap/mobile/app/navigation/NavigationAction;", "navigate", "", "navController", "Landroidx/navigation/NavController;", "resetNavigate", "Lkotlin/Function1;", "", "Lcom/studyswap/mobile/app/navigation/NavigationAction$Navigate;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$NavigateMultiple;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$NavigateWithOptions;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$NavigateWithPopUpTo;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$Pop;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$PopAndNavigate;", "Lcom/studyswap/mobile/app/navigation/NavigationAction$PopWithResult;", "app_debug"})
+public abstract interface NavigationActionRoute extends com.studyswap.mobile.app.navigation.NavigationAction {
+    
+    public abstract boolean navigate(@org.jetbrains.annotations.NotNull()
+    androidx.navigation.NavController navController, @org.jetbrains.annotations.NotNull()
+    kotlin.jvm.functions.Function1<? super com.studyswap.mobile.app.navigation.NavigationAction, kotlin.Unit> resetNavigate);
+}
