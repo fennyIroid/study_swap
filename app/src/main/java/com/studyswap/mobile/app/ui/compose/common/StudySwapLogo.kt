@@ -1,4 +1,4 @@
-package com.example.studyswap.ui.components
+package com.studyswap.mobile.app.ui.compose.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,6 +18,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.studyswap.mobile.app.ui.theme.AccentCream
+import com.studyswap.mobile.app.ui.theme.AccentMint
+import com.studyswap.mobile.app.ui.theme.PrimaryOlive
+import com.studyswap.mobile.app.ui.theme.SecondaryPeach
 
 
 @Composable
@@ -44,8 +48,8 @@ fun StudySwapLogo(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            com.example.studyswap.ui.theme.SecondaryPeach,
-                            com.example.studyswap.ui.theme.AccentCream
+                            SecondaryPeach,
+                            AccentCream
                         )
                     )
                 )
@@ -61,8 +65,8 @@ fun StudySwapLogo(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            com.example.studyswap.ui.theme.PrimaryOlive,
-                            com.example.studyswap.ui.theme.AccentMint
+                            PrimaryOlive,
+                            AccentMint
                         )
                     )
                 )
@@ -80,7 +84,7 @@ fun StudySwapLogo(
                 text = "⇄",
                 fontSize = (iconSize.value * 0.55f).sp,
                 fontWeight = FontWeight.Bold,
-                color = com.example.studyswap.ui.theme.SecondaryPeach, // Updated color
+                color = SecondaryPeach, // Updated color
                 textAlign = TextAlign.Center,
                 modifier = Modifier.offset(y = (-2).dp)
             )

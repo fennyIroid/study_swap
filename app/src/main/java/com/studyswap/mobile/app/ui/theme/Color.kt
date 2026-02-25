@@ -36,4 +36,31 @@ val WelcomeButtonSecondaryBg = Color(0xFFF5F0E8)
 val SignupInfoBanner = Color(0xFFFFF8E7)
 val SignupDivider = Color(0xFFE0E0E0)
 val SignupFieldBorder = Color(0xFFE8E8E8)
+
+
+
+// 🎨 Brand (Peach & Olive Theme)
+val PrimaryOlive: Color = Color(0xFF8DA082)      // Primary buttons, active states, headings
+val SecondaryPeach: Color = Color(0xFFF4BC96)    // Accents, tags, chips, highlights
+
+// 🎨 Accents
+val AccentCream: Color = Color(0xFFFFF5E1)
+val AccentMint: Color = Color(0xFFE1F2E8)
+
+// 🎨 Backgrounds
+val BackgroundOffWhite = Color(0xFFFBF9F6) // Warm, comfortable base
+val BackgroundDark = Color(0xFF101622)     // Keep dark bg for dark mode (or adjust if needed)
+
+// 🎨 Surfaces
+val SurfaceWhite = Color(0xFFFFFFFF)       // Card white
+val SurfaceDark = Color(0xFF1F2937)
+
+// 🎨 Text
+val TextCharcoal = Color(0xFF2D2D2D)       // High-readability body text
+val TextMutedGray = Color(0xFF757575)      // Secondary info and helper text
+val TextOnDark = Color(0xFFFFFFFF)
+
+// 🎨 Gradient Colors (Soft Blend)
+val GradientStart = AccentCream.copy(alpha = 0.2f)
+val GradientEnd = AccentMint.copy(alpha = 0.4f)
 val SignupIconTint = Color(0xFF9E9E9E)

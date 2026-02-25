@@ -1,4 +1,4 @@
-package com.example.studyswap.ui.theme
+package com.studyswap.mobile.app.ui.theme
 
 import androidx.compose.ui.unit.dp
 

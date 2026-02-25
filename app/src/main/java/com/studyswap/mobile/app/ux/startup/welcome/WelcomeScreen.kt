@@ -1,236 +1,201 @@
-package com.studyswap.mobile.app.ux.startup.welcome
+package com.example.studyswap.ui.welcome
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.studyswap.mobile.app.ux.startup.auth.signup.SignupRoute
-import com.studyswap.mobile.app.ui.theme.SplashCardSage
-import com.studyswap.mobile.app.ui.theme.SplashStudyText
-import com.studyswap.mobile.app.ui.theme.SplashSwapText
-import com.studyswap.mobile.app.ui.theme.WelcomeBackground
-import com.studyswap.mobile.app.ui.theme.WelcomeButtonSecondaryBg
-import com.studyswap.mobile.app.ui.theme.WelcomeCardBeige
-import com.studyswap.mobile.app.ui.theme.WelcomeDisclaimer
-import com.studyswap.mobile.app.ui.theme.WelcomeIllustrationBg
+import com.example.studyswap.ui.theme.*
+import com.studyswap.mobile.app.R
+import com.studyswap.mobile.app.ui.theme.BackgroundOffWhite
+import com.studyswap.mobile.app.ui.theme.Gradients
+import com.studyswap.mobile.app.ui.theme.PrimaryOlive
+import com.studyswap.mobile.app.ui.theme.StudySwapTheme
+import com.studyswap.mobile.app.ui.theme.TextCharcoal
+import com.studyswap.mobile.app.ui.theme.TextMutedGray
 
 @Composable
 fun WelcomeScreen(
-    navController: NavController
+    onSignupClick: () -> Unit,
+    onLoginClick: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(WelcomeBackground)
-            .verticalScroll(rememberScrollState())
+            .fillMaxSize()
+            .background(Gradients.Background)
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Illustration card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(WelcomeCardBeige)
-                    .padding(24.dp)
-            ) {
-                // Placeholder illustration area (students/study scene)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(WelcomeIllustrationBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.School,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = SplashCardSage.copy(alpha = 0.6f)
-                    )
-                    // Floating icons
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(16.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(WelcomeCardBeige)
-                            .border(1.dp, Color(0xFF8B7355).copy(alpha = 0.4f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.School,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = Color(0xFF6B5344)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(WelcomeCardBeige)
-                            .border(1.dp, Color(0xFF8B7355).copy(alpha = 0.4f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ChatBubbleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = Color(0xFF6B5344)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Content card (white, with drag handle)
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Color.White)
-                .padding(horizontal = 24.dp)
-                .padding(top = 12.dp, bottom = 32.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Drag handle
+            // Placeholder for Illustration
+            // In a real app, this would be an Image composable.
+            // Using a Box with a gradient or color to represent the space for now as requested by instructions to not use placeholders but generate images if needed.
+            // Since I cannot generate an image file right now without the tool, I will create a composable representation or use a placeholder descriptive box.
+            // Actually, the prompt said "Design this welcome screen exactly same as the design".
+            // The design has an illustration. I will use a Box with a color similar to the design's background for the image area.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(24.dp),
+                    .weight(1.2f) // Give a bit more space to illustration
+                    .background(Color(0xFFFDF1E6)), // Light peach/cream to blend with the illustration background
                 contentAlignment = Alignment.Center
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.welcome_illustration),
+                    contentDescription = "Welcome Illustration",
+                    modifier = Modifier
+                        .padding(30.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .height(500.dp)
+                        .width(500.dp),
+
+                    contentScale = ContentScale.Crop // Crop to fill the box responsive area
+                )
+            }
+
+            // Bottom Sheet / Content Area
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(topStart = 70.dp, topEnd = 32.dp)
+                    )
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Drag Handle Indicator
                 Box(
                     modifier = Modifier
                         .width(40.dp)
                         .height(4.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(Color(0xFFE0E0E0))
+                        .background(Color.LightGray.copy(alpha = 0.4f))
                 )
-            }
 
-            // StudySwap title
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.Center
-            ) {
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Logo Text
                 Text(
-                    text = "Study",
-                    fontSize = 28.sp,
-                    color = SplashStudyText,
-                    fontWeight = FontWeight.SemiBold
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(color = TextCharcoal)) {
+                            append("Study")
+                        }
+                        withStyle(style = SpanStyle(color = PrimaryOlive)) { // Design shows variations, sticking to primary theme or matching design
+                            // Design shows "Swap" in a green tone. PrimaryOlive matches well.
+                            append("Swap")
+                        }
+                    },
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Tagline
                 Text(
-                    text = "Swap",
-                    fontSize = 28.sp,
-                    color = SplashSwapText,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Your Campus Study Community.\nFind partners, trade books, and ace\nexams together.",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = TextMutedGray,
+                        lineHeight = 24.sp
+                    )
                 )
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(48.dp))
 
-            // Tagline
-            Text(
-                text = "Your Campus Study Community.\nFind partners, trade books, and ace\nexams together.",
-                fontSize = 15.sp,
-                color = Color(0xFF6B6B6B),
-                lineHeight = 22.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+                // Sign Up Button
+                Button(
+                    onClick = onSignupClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryOlive,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(
+                        text = "Sign Up",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    // Arrow Icon
+                    Text(text = "→", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
 
-            Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Sign Up button
-            Button(
-                onClick = { navController.navigate(SignupRoute.routeDefinition.value) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SplashCardSage),
-                contentPadding = ButtonDefaults.ContentPadding
-            ) {
-                Text("Sign Up", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = Color.White
+                // Log In Button
+                Button(
+                    onClick = onLoginClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BackgroundOffWhite, // Or White with Border
+                        contentColor = PrimaryOlive
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)) // Subtle border
+                ) {
+                    Text(
+                        text = "Log In",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Terms
+                Text(
+                    text = "By continuing, you agree to our Terms & Privacy Policy",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = TextMutedGray.copy(alpha = 0.7f),
+                        fontSize = 12.sp
+                    )
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Log In button
-            OutlinedButton(
-                onClick = { navController.navigate(LoginRoute.routeDefinition.value) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = WelcomeButtonSecondaryBg,
-                    contentColor = SplashCardSage
-                ),
-                border = null
-            ) {
-                Text("Log In", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Disclaimer
-            Text(
-                text = "By continuing, you agree to our Terms & Privacy Policy",
-                fontSize = 12.sp,
-                color = WelcomeDisclaimer,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
+    }
+}
+
+@Preview(showBackground = true, heightDp = 800)
+@Composable
+fun WelcomeScreenPreview() {
+    StudySwapTheme {
+        WelcomeScreen(onSignupClick = {}, onLoginClick = {})
     }
 }
