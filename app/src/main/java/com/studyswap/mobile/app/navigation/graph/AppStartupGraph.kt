@@ -8,8 +8,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.studyswap.mobile.app.ux.sample.BaseRoute
 import com.studyswap.mobile.app.ux.sample.BaseScreen
+import com.studyswap.mobile.app.ux.startup.auth.LoginRoute
+import com.studyswap.mobile.app.ux.startup.auth.LoginScreen
+import com.studyswap.mobile.app.ux.startup.auth.signup.SignupRoute
+import com.studyswap.mobile.app.ux.startup.auth.signup.SignupScreen
 import com.studyswap.mobile.app.ux.startup.splash.SplashRoute
 import com.studyswap.mobile.app.ux.startup.splash.SplashScreen
+import com.studyswap.mobile.app.ux.startup.welcome.WelcomeRoute
+import com.studyswap.mobile.app.ux.startup.welcome.WelcomeScreen
 
 @Composable
 fun AppStartupGraph(
@@ -25,6 +31,15 @@ fun AppStartupGraph(
     ) {
         composable(SplashRoute.routeDefinition.value) {
             SplashScreen(navController = navController)
+        }
+        composable(WelcomeRoute.routeDefinition.value) {
+            WelcomeScreen(navController = navController)
+        }
+        composable(SignupRoute.routeDefinition.value) {
+            SignupScreen(navController = navController)
+        }
+        composable(LoginRoute.routeDefinition.value) {
+            LoginScreen(navController = navController)
         }
         composable(BaseRoute.routeDefinition.value) {
             BaseScreen()
