@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -157,6 +158,16 @@ private fun SignupScreenContent(
                 value = uiStateData.email,
                 onValueChange = { event(SignupUiEvent.OnEmailChange(it)) },
                 errorMessage = uiStateData.emailError
+            )
+
+            SignupInputField(
+                label = "Phone Number",
+                placeholder = "9662154155",
+                icon = Icons.Outlined.Phone,
+                keyboardType = KeyboardType.Phone,
+                value = uiStateData.phone,
+                onValueChange = { event(SignupUiEvent.OnPhoneChange(it)) },
+                errorMessage = uiStateData.phoneError
             )
 
             SignupInputField(

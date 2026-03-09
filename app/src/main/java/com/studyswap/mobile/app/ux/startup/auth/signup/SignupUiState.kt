@@ -21,11 +21,14 @@ data class SignupUiDataState(
     val confirmPassword: String = "",
     val confirmPasswordError: String? = null,
     val isConfirmPasswordVisible: Boolean = false,
+    val phone: String = "",
+    val phoneError: String? = null,
     val isLoading: Boolean = false
 )
 
 sealed interface SignupUiEvent {
     data class OnFullNameChange(val value: String) : SignupUiEvent
+    data class OnPhoneChange(val value: String) : SignupUiEvent
     data class OnUniversityChange(val value: String) : SignupUiEvent
     data class OnEmailChange(val value: String) : SignupUiEvent
     data class OnPasswordChange(val value: String) : SignupUiEvent

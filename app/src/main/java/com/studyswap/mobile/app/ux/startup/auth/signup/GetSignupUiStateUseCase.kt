@@ -3,14 +3,19 @@ package com.studyswap.mobile.app.ux.startup.auth.signup
 import android.content.Context
 import com.studyswap.mobile.app.navigation.NavigationAction
 import com.studyswap.mobile.app.navigation.NavRoute
-import com.studyswap.mobile.app.ux.startup.auth.LoginRoute
+import com.studyswap.mobile.app.data.source.remote.helper.NetworkResult
+import com.studyswap.mobile.app.data.source.remote.model.SignupRequest
+import com.studyswap.mobile.app.data.source.remote.repository.ApiRepository
+import com.studyswap.mobile.app.ux.startup.auth.login.LoginRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class GetSignupUiStateUseCase @Inject constructor() {
+class GetSignupUiStateUseCase @Inject constructor(
+    private val apiRepository: ApiRepository
+) {
 
     private val _signupUiStateFlow = MutableStateFlow(SignupUiDataState())
 
@@ -32,6 +37,9 @@ class GetSignupUiStateUseCase @Inject constructor() {
         when (event) {
             is SignupUiEvent.OnFullNameChange -> _signupUiStateFlow.update {
                 it.copy(fullName = event.value, fullNameError = null)
+            }
+            is SignupUiEvent.OnPhoneChange -> _signupUiStateFlow.update {
+                it.copy(phone = event.value, phoneError = null)
             }
             is SignupUiEvent.OnUniversityChange -> _signupUiStateFlow.update {
                 it.copy(university = event.value, universityError = null)
@@ -65,6 +73,7 @@ class GetSignupUiStateUseCase @Inject constructor() {
                     state.password.length < 6 -> "At least 6 characters"
                     else -> null
                 }
+                val phoneError = if (state.phone.isBlank()) "Required" else null
                 val confirmError = if (state.confirmPassword != state.password) "Passwords must match" else null
                 _signupUiStateFlow.update {
                     it.copy(
@@ -72,14 +81,36 @@ class GetSignupUiStateUseCase @Inject constructor() {
                         universityError = universityError,
                         emailError = emailError,
                         passwordError = passwordError,
+                        phoneError = phoneError,
                         confirmPasswordError = confirmError
                     )
                 }
-                if (fullNameError == null && universityError == null && emailError == null && passwordError == null && confirmError == null) {
+                if (fullNameError == null && universityError == null && emailError == null && passwordError == null && confirmError == null && phoneError == null) {
                     coroutineScope.launch {
-                        _signupUiStateFlow.update { it.copy(isLoading = true) }
-                        // TODO: call API when ready
-                        _signupUiStateFlow.update { it.copy(isLoading = false) }
+                        val request = SignupRequest(
+                            fullName = state.fullName,
+                            email = state.email,
+                            password = state.password,
+                            phone = state.phone,
+                            universityId = 1 // Default
+                        )
+                        apiRepository.signup(request).collect { result ->
+                            when (result) {
+                                is NetworkResult.Loading -> _signupUiStateFlow.update { it.copy(isLoading = true) }
+                                is NetworkResult.Success -> {
+                                    _signupUiStateFlow.update { it.copy(isLoading = false) }
+                                    // Navigate to home or login after success
+                                    navigate(NavigationAction.Navigate(LoginRoute.createRoute()))
+                                }
+                                is NetworkResult.Error -> {
+                                    _signupUiStateFlow.update { it.copy(isLoading = false) }
+                                    // Handle generic error showing if needed
+                                }
+                                is NetworkResult.UnAuthenticated -> {
+                                    _signupUiStateFlow.update { it.copy(isLoading = false) }
+                                }
+                            }
+                        }
                     }
                 }
             }

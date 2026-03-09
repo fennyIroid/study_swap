@@ -1,15 +1,82 @@
+# ===========================
+# Android Studio / IntelliJ
+# ===========================
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.idea/
+!.idea/codeStyles
+!.idea/runConfigurations
+
+# ===========================
+# Build output
+# ===========================
+/build/
+**/build/
+app/build/
+
+# ===========================
+# Gradle
+# ===========================
+.gradle/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
+
+# ===========================
+# Local configuration
+# ===========================
 local.properties
+*.env
+
+# ===========================
+# Keystore / Signing
+# ===========================
+*.jks
+*.keystore
+*.pem
+
+# ===========================
+# APK / AAB outputs
+# ===========================
+*.apk
+*.ap_
+*.aab
+
+# ===========================
+# Proguard / R8
+# ===========================
+*.map
+
+# ===========================
+# Native builds
+# ===========================
+.externalNativeBuild/
+.cxx/
+
+# ===========================
+# Logs
+# ===========================
+*.log
+
+# ===========================
+# Android Studio captures
+# ===========================
+captures/
+
+# ===========================
+# OS generated files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# ===========================
+# Kotlin
+# ===========================
+*.kotlin_module
+
+# ===========================
+# Misc
+# ===========================
+*.hprof

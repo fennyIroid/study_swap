@@ -18,7 +18,7 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        buildConfigField("String", "BASE_URL", "\"https://api.example.com/\"")
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/\"")
     }
 
     buildTypes {
@@ -78,4 +78,5 @@ dependencies {
     implementation(libs.toasty)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.kotlin.coroutines.android)
+    implementation(libs.coil.compose)
 }

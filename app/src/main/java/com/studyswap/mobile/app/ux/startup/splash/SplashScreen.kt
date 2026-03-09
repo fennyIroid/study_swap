@@ -22,6 +22,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import com.studyswap.mobile.app.ux.startup.splash.SplashViewModel
+import com.studyswap.mobile.app.ux.startup.splash.SplashRoute
 import com.example.studyswap.ui.theme.*
 import com.studyswap.mobile.app.ui.theme.AccentCream
 import com.studyswap.mobile.app.ui.theme.AccentMint
@@ -79,18 +86,30 @@ fun StudySwapLogo(modifier: Modifier = Modifier) {
                 text = "⇄",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = SecondaryPeach, // Updated
+                color = SecondaryPeach,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-2).dp) // Visual centering adjustment
+                modifier = Modifier.offset(y = (-2).dp)
             )
         }
-
-        // Speculative: Add decorative stars/dots if needed, but keeping it simple for now to align with "clean" request.
     }
 }
 
 @Composable
-fun SplashScreen(navController: NavController? = null) {
+fun SplashScreen(
+    navController: NavController? = null,
+    viewModel: SplashViewModel = hiltViewModel()
+) {
+    val nextRoute by viewModel.nextRoute.collectAsStateWithLifecycle()
+
+    LaunchedEffect(nextRoute) {
+        nextRoute?.let { destination ->
+            delay(2000)
+            navController?.navigate(destination) {
+                popUpTo(SplashRoute.routeDefinition.value) { inclusive = true }
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
