@@ -108,12 +108,26 @@ private fun ProfileScreenContent(
                     border = CardDefaults.outlinedCardBorder(enabled = true),
                     color = Color.LightGray
                 ) {
-                    AsyncImage(
-                        model = uiStateData.userData?.profileImage,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    val imageUrl = uiStateData.userData?.profileImage
+                    if (!imageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = uiStateData.userData?.fullName?.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 }
                 
                 // Verified Badge

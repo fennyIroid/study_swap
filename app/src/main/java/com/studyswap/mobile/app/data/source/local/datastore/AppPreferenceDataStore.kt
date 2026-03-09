@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -27,6 +28,7 @@ class AppPreferenceDataStore @Inject constructor(
     )
 
     private object Keys {
+        val HAS_COMPLETED_AUTH = booleanPreferencesKey("has_completed_auth")
         val USER_TOKEN = stringPreferencesKey("user_token")
         val USER_ID = intPreferencesKey("user_id")
         val FULL_NAME = stringPreferencesKey("full_name")
@@ -38,6 +40,14 @@ class AppPreferenceDataStore @Inject constructor(
         val RATING = doublePreferencesKey("rating")
         val REPUTATION = intPreferencesKey("reputation")
         val PROFILE_IMAGE = stringPreferencesKey("profile_image")
+    }
+
+    suspend fun setHasCompletedAuth(value: Boolean) {
+        applicationContext.dataStore.edit { it[Keys.HAS_COMPLETED_AUTH] = value }
+    }
+
+    suspend fun getHasCompletedAuth(): Boolean {
+        return applicationContext.dataStore.data.map { it[Keys.HAS_COMPLETED_AUTH] ?: false }.first()
     }
 
     suspend fun getUserToken(): String? {

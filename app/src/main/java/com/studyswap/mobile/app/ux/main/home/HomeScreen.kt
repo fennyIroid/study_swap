@@ -48,6 +48,7 @@ import com.example.studyswap.ui.components.BottomNavigationBar
 import com.example.studyswap.ui.components.FilterChips
 import com.example.studyswap.ui.components.SearchBar
 import com.studyswap.mobile.app.data.source.remote.model.GroupData
+import com.studyswap.mobile.app.ux.container.groupdetails.GroupDetailsRoute
 import com.studyswap.mobile.app.ui.theme.BackgroundOffWhite
 import com.studyswap.mobile.app.ui.theme.PrimaryOlive
 import com.studyswap.mobile.app.ui.theme.SecondaryPeach
@@ -204,6 +205,56 @@ fun HomeScreen(
                 }
             }
 
+            item { Spacer(modifier = Modifier.height(12.dp)) }
+
+            // Join a group card
+            item {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(SecondaryPeach.copy(alpha = 0.7f))
+                        .clickable { navController?.navigate(com.studyswap.mobile.app.ux.container.joingroup.JoinGroupRoute.routeDefinition.value) }
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Join a group",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextCharcoal
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Find groups by invite code or browse communities",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMutedGray
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(PrimaryOlive.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "→",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = PrimaryOlive
+                            )
+                        }
+                    }
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(24.dp)) }
 
             // Filter Chips
@@ -253,7 +304,7 @@ fun HomeScreen(
             } else {
                 items(uiState.allGroups) { group ->
                     Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                        AllGroupCard(group)
+                        AllGroupCard(group = group, navController = navController)
                     }
                 }
             }
@@ -333,7 +384,10 @@ fun GroupCard(group: GroupData) {
 }
 
 @Composable
-fun AllGroupCard(group: GroupData) {
+fun AllGroupCard(
+    group: GroupData,
+    navController: NavController? = null
+) {
     val iconInitial = group.name?.firstOrNull()?.uppercaseChar()?.toString() ?: "G"
     val iconColor = if ((group.id ?: 0) % 2 == 0) PrimaryOlive else SecondaryPeach
 
@@ -349,36 +403,49 @@ fun AllGroupCard(group: GroupData) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(iconColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
+                    .weight(1f)
+                    .clickable {
+                        group.id?.let { id ->
+                            navController?.navigate(GroupDetailsRoute.createRoute(id).value)
+                        }
+                    }
             ) {
-                Text(
-                    text = iconInitial,
-                    color = iconColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = group.name ?: "Unnamed Group",
-                    fontWeight = FontWeight.Bold,
-                    color = TextCharcoal,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${group.subject ?: group.groupType ?: ""} • ${if (group.isPublic == 1) "Public" else "Private"}",
-                    color = TextMutedGray,
-                    fontSize = 12.sp,
-                    maxLines = 1
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(iconColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = iconInitial,
+                            color = iconColor,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = group.name ?: "Unnamed Group",
+                            fontWeight = FontWeight.Bold,
+                            color = TextCharcoal,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "${group.subject ?: group.groupType ?: ""} • ${if (group.isPublic == 1) "Public" else "Private"}",
+                            color = TextMutedGray,
+                            fontSize = 12.sp,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
             Box(
                 modifier = Modifier
+                    .clickable { navController?.navigate(com.studyswap.mobile.app.ux.container.joingroup.JoinGroupRoute.routeDefinition.value) }
                     .background(PrimaryOlive.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
