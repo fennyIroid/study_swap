@@ -6,6 +6,7 @@ import android.content.Context
 import com.studyswap.mobile.app.data.source.remote.helper.NetworkResult
 import com.studyswap.mobile.app.data.source.remote.repository.ApiRepository
 import com.studyswap.mobile.app.navigation.NavigationAction
+import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -70,7 +71,8 @@ class GetGroupDetailsUiStateUseCase @Inject constructor(
             is GroupDetailsUiEvent.OnSortChange ->
                 _uiDataStateFlow.update { it.copy(sortByLatest = !it.sortByLatest) }
             is GroupDetailsUiEvent.OnDownloadMaterial -> { /* TODO: download */ }
-            is GroupDetailsUiEvent.OnAddMaterialClick -> { /* TODO: add material */ }
+            is GroupDetailsUiEvent.OnAddMaterialClick ->
+                navigate(NavigationAction.Navigate(UploadMaterialRoute.createRoute()))
             is GroupDetailsUiEvent.LoadGroupDetails -> coroutineScope.launch {
                 loadGroupDetails(groupId)
             }

@@ -16,6 +16,8 @@ import com.studyswap.mobile.app.ux.container.profile.ProfileRoute
 import com.studyswap.mobile.app.ux.container.profile.ProfileScreen
 import com.studyswap.mobile.app.ux.container.marketplaceitemdetail.MarketplaceItemDetailRoute
 import com.studyswap.mobile.app.ux.container.marketplaceitemdetail.MarketplaceItemDetailScreen
+import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialRoute
+import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialScreen
 import com.studyswap.mobile.app.ux.main.home.HomeRoute
 import com.studyswap.mobile.app.ux.main.home.HomeScreen
 import com.studyswap.mobile.app.ux.main.marketplace.MarketplaceHomeScreen
@@ -80,6 +82,9 @@ fun AppStartupGraph(
             arguments = GroupDetailsRoute.getArguments()
         ) {
             GroupDetailsScreen(navController = navController)
+        }
+        composable(UploadMaterialRoute.routeDefinition.value) {
+            UploadMaterialScreen(navController = navController)
         }
         composable(BaseRoute.routeDefinition.value) {
             BaseScreen()
