@@ -60,10 +60,13 @@ class GetJoinGroupUiStateUseCase @Inject constructor(
                 _uiDataStateFlow.update { it.copy(selectedCategory = event.category) }
             is JoinGroupUiEvent.OnRequestJoin -> {
                 val id = event.group.id ?: return
+                // Optimistically mark as requested to disable button immediately
                 _uiDataStateFlow.update {
                     it.copy(requestedGroupIds = it.requestedGroupIds + id)
                 }
-                // TODO: call API requestToJoinGroup(id) when available
+                coroutineScope.launch {
+                    sendJoinRequest(id)
+                }
             }
             is JoinGroupUiEvent.OnViewAllClick -> {
                 // Could navigate to full browse or expand list; for now no-op or same screen
@@ -96,6 +99,35 @@ class GetJoinGroupUiStateUseCase @Inject constructor(
                     }
                 is NetworkResult.UnAuthenticated ->
                     _uiDataStateFlow.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    private suspend fun sendJoinRequest(groupId: Int) {
+        apiRepository.sendGroupRequest(groupId).collect { result ->
+            when (result) {
+                is NetworkResult.Loading -> {
+                    // no global spinner; could add per-item loading if needed
+                }
+                is NetworkResult.Success -> {
+                    // nothing else to do; requestedGroupIds already updated
+                }
+                is NetworkResult.Error -> {
+                    _uiDataStateFlow.update {
+                        it.copy(
+                            errorMessage = result.message,
+                            requestedGroupIds = it.requestedGroupIds - groupId
+                        )
+                    }
+                }
+                is NetworkResult.UnAuthenticated -> {
+                    _uiDataStateFlow.update {
+                        it.copy(
+                            errorMessage = "Session expired. Please log in again.",
+                            requestedGroupIds = it.requestedGroupIds - groupId
+                        )
+                    }
+                }
             }
         }
     }

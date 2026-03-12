@@ -22,6 +22,19 @@ data class MaterialItem(
 
 enum class MaterialType { NOTES, BOOKS, QUESTION_PAPERS }
 
+data class GroupSettingsUi(
+    val allowMemberInvite: Boolean,
+    val allowFileShare: Boolean,
+    val allowChat: Boolean
+)
+
+data class GroupMemberUi(
+    val id: String,
+    val userId: String,
+    val role: String,
+    val joinedAt: String
+)
+
 data class GroupDetailsUiDataState(
     val group: GroupData? = null,
     val memberCount: Int = 0,
@@ -33,6 +46,8 @@ data class GroupDetailsUiDataState(
     val materialsSearchQuery: String = "",
     val materialsTab: MaterialType = MaterialType.NOTES,
     val sortByLatest: Boolean = true,
+    val settings: GroupSettingsUi? = null,
+    val members: List<GroupMemberUi> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -52,6 +67,10 @@ sealed class GroupDetailsUiEvent {
     data class OnDownloadMaterial(val material: MaterialItem) : GroupDetailsUiEvent()
     object OnAddMaterialClick : GroupDetailsUiEvent()
     object LoadGroupDetails : GroupDetailsUiEvent()
+    data class OnSettingsChanged(val settings: GroupSettingsUi) : GroupDetailsUiEvent()
+    data class OnMemberRoleChange(val member: GroupMemberUi, val newRole: String) : GroupDetailsUiEvent()
+    data class OnRemoveMember(val member: GroupMemberUi) : GroupDetailsUiEvent()
+    object OnLeaveGroupClick : GroupDetailsUiEvent()
     object OnDismissError : GroupDetailsUiEvent()
 }
 

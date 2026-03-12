@@ -21,5 +21,39 @@ interface ApiRepository {
     ): Flow<NetworkResult<CreateGroupResponse>>
 
     suspend fun getGroups(): Flow<NetworkResult<GetGroupsResponse>>
+
+    suspend fun getGroupDetails(groupId: Int): Flow<NetworkResult<GetGroupDetailsResponse>>
+
+    suspend fun setGroupSettings(
+        groupId: Int,
+        allowMemberInvite: Boolean,
+        allowFileShare: Boolean,
+        allowChat: Boolean
+    ): Flow<NetworkResult<SetGroupSettingsResponse>>
+
+    suspend fun sendGroupRequest(groupId: Int): Flow<NetworkResult<SendGroupRequestResponse>>
+
+    suspend fun acceptGroupRequest(requestId: Int): Flow<NetworkResult<AcceptGroupRequestResponse>>
+
+    suspend fun rejectGroupRequest(requestId: Int): Flow<NetworkResult<RejectGroupRequestResponse>>
+
+    suspend fun setGroupMemberRole(
+        groupId: Int,
+        userId: Int,
+        role: String
+    ): Flow<NetworkResult<SetGroupMemberRoleResponse>>
+
+    suspend fun removeGroupMember(
+        groupId: Int,
+        userId: Int
+    ): Flow<NetworkResult<RemoveGroupMemberResponse>>
+
+    suspend fun leaveGroup(
+        groupId: Int
+    ): Flow<NetworkResult<LeaveGroupResponse>>
+
+    suspend fun generateInviteLink(
+        groupId: Int
+    ): Flow<NetworkResult<GenerateInviteLinkResponse>>
 }
 

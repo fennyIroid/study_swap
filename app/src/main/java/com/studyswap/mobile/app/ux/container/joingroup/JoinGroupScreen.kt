@@ -525,62 +525,9 @@ private fun formatLastActive(lastActivityAt: String?): String {
 @Preview(showBackground = true)
 @Composable
 fun JoinGroupScreenPreview() {
-    val sampleGroups = listOf(
-        GroupData(
-            id = 1,
-            creatorId = 100,
-            name = "Advanced Calc 101",
-            groupIcon = null,
-            description = "Study group for calculus",
-            groupType = "study",
-            subject = "Calculus",
-            maxMembers = 12,
-            isPublic = 1,
-            approvalRequired = 1,
-            status = "active",
-            lastActivityAt = "2025-03-09T10:00:00",
-            inviteLink = null,
-            createdAt = null,
-            deletedAt = null
-        ),
-        GroupData(
-            id = 2,
-            creatorId = 101,
-            name = "Literature Club",
-            groupIcon = null,
-            description = null,
-            groupType = "study",
-            subject = "Literature",
-            maxMembers = 45,
-            isPublic = 1,
-            approvalRequired = 0,
-            status = "active",
-            lastActivityAt = "2025-03-09T09:00:00",
-            inviteLink = null,
-            createdAt = null,
-            deletedAt = null
-        ),
-        GroupData(
-            id = 3,
-            creatorId = 102,
-            name = "Organic Chem Lab",
-            groupIcon = null,
-            description = null,
-            groupType = "study",
-            subject = "Chemistry",
-            maxMembers = 8,
-            isPublic = 1,
-            approvalRequired = 1,
-            status = "active",
-            lastActivityAt = "2025-03-08T14:30:00",
-            inviteLink = null,
-            createdAt = null,
-            deletedAt = null
-        )
-    )
     val previewState = JoinGroupUiDataState(
         inviteCode = "",
-        browseGroups = sampleGroups,
+        browseGroups = emptyList(),
         selectedCategory = "All Groups",
         searchQuery = "",
         requestedGroupIds = setOf(3),

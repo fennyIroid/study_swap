@@ -24,3 +24,36 @@ data class GetGroupsResponse(
     @SerializedName("status") val status: String?,
     @SerializedName("data") val data: List<GroupData>?
 )
+
+// Detailed group response ----------------------------------------------------
+
+data class GroupSettingsData(
+    @SerializedName("group_id") val groupId: Int?,
+    @SerializedName("allow_member_invite") val allowMemberInvite: Int?,
+    @SerializedName("allow_file_share") val allowFileShare: Int?,
+    @SerializedName("allow_chat") val allowChat: Int?
+)
+
+data class GroupMemberData(
+    @SerializedName("id") val id: Int?,
+    @SerializedName("group_id") val groupId: Int?,
+    @SerializedName("user_id") val userId: Int?,
+    @SerializedName("role") val role: String?,
+    @SerializedName("joined_at") val joinedAt: String?
+)
+
+data class GroupDetailsPayload(
+    @SerializedName("group") val group: GroupData?,
+    @SerializedName("settings") val settings: GroupSettingsData?,
+    @SerializedName("members") val members: List<GroupMemberData>?
+)
+
+data class GetGroupDetailsResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("data") val data: GroupDetailsPayload?
+)
+
+data class GenerateInviteLinkResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("data") val data: GroupData?
+)

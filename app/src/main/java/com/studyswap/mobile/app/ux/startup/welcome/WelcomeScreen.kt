@@ -1,6 +1,5 @@
 package com.example.studyswap.ui.welcome
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,8 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -26,7 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyswap.ui.theme.*
-import com.studyswap.mobile.app.R
 import com.studyswap.mobile.app.ui.theme.BackgroundOffWhite
 import com.studyswap.mobile.app.ui.theme.Gradients
 import com.studyswap.mobile.app.ui.theme.PrimaryOlive
@@ -49,30 +45,76 @@ fun WelcomeScreen(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Placeholder for Illustration
-            // In a real app, this would be an Image composable.
-            // Using a Box with a gradient or color to represent the space for now as requested by instructions to not use placeholders but generate images if needed.
-            // Since I cannot generate an image file right now without the tool, I will create a composable representation or use a placeholder descriptive box.
-            // Actually, the prompt said "Design this welcome screen exactly same as the design".
-            // The design has an illustration. I will use a Box with a color similar to the design's background for the image area.
+            // Top illustration area – use a themed composable instead of a bitmap
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1.2f) // Give a bit more space to illustration
-                    .background(Color(0xFFFDF1E6)), // Light peach/cream to blend with the illustration background
+                    .weight(1.2f)
+                    .padding(horizontal = 32.dp, vertical = 24.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(Color(0xFFFDF1E6)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.welcome_illustration),
-                    contentDescription = "Welcome Illustration",
-                    modifier = Modifier
-                        .padding(30.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .height(500.dp)
-                        .width(500.dp),
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color(0xFF8DA082).copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "A",
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryOlive
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color(0xFFEBC8A4)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "B",
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextCharcoal
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color(0xFFE1F2E8)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "C",
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryOlive
+                            )
+                        }
+                    }
 
-                    contentScale = ContentScale.Crop // Crop to fill the box responsive area
-                )
+                    Text(
+                        text = "Study together. Swap notes.\nGrow your GPA.",
+                        textAlign = TextAlign.Center,
+                        color = TextCharcoal,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
             // Bottom Sheet / Content Area

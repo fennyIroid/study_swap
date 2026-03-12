@@ -136,4 +136,239 @@ class ApiRepositoryImpl @Inject constructor(
     }.onStart { emit(NetworkResult.Loading()) }.catch { e ->
         emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
     }.flowOn(Dispatchers.IO)
+
+    override suspend fun getGroupDetails(groupId: Int): Flow<NetworkResult<GetGroupDetailsResponse>> =
+        flow {
+            try {
+                val response = apiServices.getGroupDetails(groupId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(
+                        NetworkResult.Error(
+                            "Failed to fetch group details: ${response.errorBody()?.string()}"
+                        )
+                    )
+                }
+            } catch (e: HttpException) {
+                emit(NetworkResult.Error(e.message() ?: "An error occurred"))
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun setGroupSettings(
+        groupId: Int,
+        allowMemberInvite: Boolean,
+        allowFileShare: Boolean,
+        allowChat: Boolean
+    ): Flow<NetworkResult<SetGroupSettingsResponse>> = flow {
+        try {
+            val request = SetGroupSettingsRequest(
+                allowMemberInvite = if (allowMemberInvite) 1 else 0,
+                allowFileShare = if (allowFileShare) 1 else 0,
+                allowChat = if (allowChat) 1 else 0
+            )
+            val response = apiServices.setGroupSettings(groupId, request)
+            if (response.isSuccessful && response.body() != null) {
+                emit(NetworkResult.Success(response.body()))
+            } else {
+                emit(
+                    NetworkResult.Error(
+                        response.errorBody().extractError()
+                    )
+                )
+            }
+        } catch (e: IOException) {
+            emit(NetworkResult.Error("Please check your network connection"))
+        } catch (e: HttpException) {
+            if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+            else emit(NetworkResult.Error(e.message()))
+        } catch (e: Exception) {
+            emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+        }
+    }.onStart { emit(NetworkResult.Loading()) }
+        .catch { e ->
+            emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+        }
+        .flowOn(Dispatchers.IO)
+
+    override suspend fun sendGroupRequest(groupId: Int): Flow<NetworkResult<SendGroupRequestResponse>> =
+        flow {
+            try {
+                val response = apiServices.sendGroupRequest(groupId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun acceptGroupRequest(requestId: Int): Flow<NetworkResult<AcceptGroupRequestResponse>> =
+        flow {
+            try {
+                val response = apiServices.acceptGroupRequest(requestId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun rejectGroupRequest(requestId: Int): Flow<NetworkResult<RejectGroupRequestResponse>> =
+        flow {
+            try {
+                val response = apiServices.rejectGroupRequest(requestId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun setGroupMemberRole(
+        groupId: Int,
+        userId: Int,
+        role: String
+    ): Flow<NetworkResult<SetGroupMemberRoleResponse>> =
+        flow {
+            try {
+                val request = SetGroupMemberRoleRequest(role = role)
+                val response = apiServices.setGroupMemberRole(groupId, userId, request)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun removeGroupMember(
+        groupId: Int,
+        userId: Int
+    ): Flow<NetworkResult<RemoveGroupMemberResponse>> =
+        flow {
+            try {
+                val response = apiServices.removeGroupMember(groupId, userId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun leaveGroup(
+        groupId: Int
+    ): Flow<NetworkResult<LeaveGroupResponse>> =
+        flow {
+            try {
+                val response = apiServices.leaveGroup(groupId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
+
+    override suspend fun generateInviteLink(
+        groupId: Int
+    ): Flow<NetworkResult<GenerateInviteLinkResponse>> =
+        flow {
+            try {
+                val response = apiServices.generateInviteLink(groupId)
+                if (response.isSuccessful && response.body() != null) {
+                    emit(NetworkResult.Success(response.body()))
+                } else {
+                    emit(NetworkResult.Error(response.errorBody().extractError()))
+                }
+            } catch (e: IOException) {
+                emit(NetworkResult.Error("Please check your network connection"))
+            } catch (e: HttpException) {
+                if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+                else emit(NetworkResult.Error(e.message()))
+            } catch (e: Exception) {
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+        }.onStart { emit(NetworkResult.Loading()) }
+            .catch { e ->
+                emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+            }
+            .flowOn(Dispatchers.IO)
 }

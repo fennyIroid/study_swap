@@ -182,11 +182,27 @@ private fun GroupDetailsContent(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    GroupMetaSection(
+                        group = group,
+                        settings = uiState.settings
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     if (uiState.isAdmin) {
                         AdminToolsSection(
                             pendingRequests = uiState.pendingRequests,
                             unreadPendingCount = uiState.unreadPendingCount,
                             joinCode = uiState.joinCode,
+                            settings = uiState.settings,
+                            onSettingsChanged = { updated ->
+                                event(
+                                    GroupDetailsUiEvent.OnSettingsChanged(updated)
+                                )
+                            },
+                            members = uiState.members,
+                            onMemberRoleChange = { member, role ->
+                                event(GroupDetailsUiEvent.OnMemberRoleChange(member, role))
+                            },
                             event = event
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -202,6 +218,26 @@ private fun GroupDetailsContent(
                         onSortClick = { event(GroupDetailsUiEvent.OnSortChange) },
                         onDownload = { event(GroupDetailsUiEvent.OnDownloadMaterial(it)) }
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    if (!uiState.isAdmin) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(Color.White)
+                                .clickable { event(GroupDetailsUiEvent.OnLeaveGroupClick) }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Leave Group",
+                                color = Color.Red,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 } ?: run {
                     if (!uiState.isLoading) {
                         Text(
@@ -336,10 +372,87 @@ private fun GroupHeaderSection(
 }
 
 @Composable
+private fun GroupMetaSection(
+    group: GroupData,
+    settings: GroupSettingsUi?
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(20.dp))
+            .padding(16.dp)
+    ) {
+        group.description?.takeIf { it.isNotBlank() }?.let { desc ->
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            group.subject?.takeIf { it.isNotBlank() }?.let { subject ->
+                MetaChip(label = subject)
+            }
+            group.groupType?.takeIf { it.isNotBlank() }?.let { type ->
+                MetaChip(label = type.replaceFirstChar { it.uppercaseChar() })
+            }
+            group.maxMembers?.let { max ->
+                MetaChip(label = "Max $max")
+            }
+            group.isPublic?.let { isPublic ->
+                MetaChip(label = if (isPublic == 1) "Public" else "Private")
+            }
+        }
+
+        settings?.let {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MetaChip(
+                    label = if (it.allowMemberInvite) "Member invites on" else "Member invites off"
+                )
+                MetaChip(
+                    label = if (it.allowFileShare) "File sharing on" else "File sharing off"
+                )
+                MetaChip(
+                    label = if (it.allowChat) "Chat on" else "Chat off"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MetaChip(label: String) {
+    Box(
+        modifier = Modifier
+            .background(TextMutedGray.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = TextCharcoal
+        )
+    }
+}
+
+@Composable
 private fun AdminToolsSection(
     pendingRequests: List<PendingRequestItem>,
     unreadPendingCount: Int,
     joinCode: String,
+    settings: GroupSettingsUi?,
+    onSettingsChanged: (GroupSettingsUi) -> Unit,
+    members: List<GroupMemberUi>,
+    onMemberRoleChange: (GroupMemberUi, String) -> Unit,
     event: (GroupDetailsUiEvent) -> Unit
 ) {
     Column {
@@ -485,6 +598,163 @@ private fun AdminToolsSection(
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh")
             }
         }
+
+        settings?.let { current ->
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "Group Settings",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            fun toggleSettings(
+                update: (GroupSettingsUi) -> GroupSettingsUi
+            ) {
+                onSettingsChanged(update(current))
+            }
+
+            SettingToggleRow(
+                title = "Allow member invites",
+                description = "Members can invite others to this group",
+                checked = current.allowMemberInvite,
+                onCheckedChange = {
+                    toggleSettings { s -> s.copy(allowMemberInvite = it) }
+                }
+            )
+            SettingToggleRow(
+                title = "Allow file sharing",
+                description = "Members can upload and share materials",
+                checked = current.allowFileShare,
+                onCheckedChange = {
+                    toggleSettings { s -> s.copy(allowFileShare = it) }
+                }
+            )
+            SettingToggleRow(
+                title = "Allow chat",
+                description = "Enable group chat for members",
+                checked = current.allowChat,
+                onCheckedChange = {
+                    toggleSettings { s -> s.copy(allowChat = it) }
+                }
+            )
+        }
+
+        if (members.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "Members",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            members.forEach { member ->
+                MemberRoleRow(
+                    member = member,
+                    onRoleChange = { newRole -> onMemberRoleChange(member, newRole) },
+                    onRemove = { event(GroupDetailsUiEvent.OnRemoveMember(member)) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberRoleRow(
+    member: GroupMemberUi,
+    onRoleChange: (String) -> Unit,
+    onRemove: () -> Unit
+) {
+    val roles = listOf("admin", "moderator", "member")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "User ${member.userId}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextCharcoal,
+                fontWeight = FontWeight.Medium
+            )
+            if (member.joinedAt.isNotBlank()) {
+                Text(
+                    text = "Joined ${member.joinedAt}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMutedGray
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            roles.forEach { role ->
+                val isSelected = member.role.equals(role, ignoreCase = true)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = if (isSelected) PrimaryOlive else TextMutedGray.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .clickable { if (!isSelected) onRoleChange(role) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = role.replaceFirstChar { it.uppercaseChar() },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isSelected) Color.White else TextCharcoal
+                    )
+                }
+            }
+
+            Text(
+                text = "Remove",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Red,
+                modifier = Modifier
+                    .clickable(onClick = onRemove)
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingToggleRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextCharcoal,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMutedGray
+            )
+        }
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }
 
