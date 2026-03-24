@@ -14,6 +14,7 @@ object EndPoints {
     object Group {
         const val CREATE_GROUP = "api/create_group"
         const val GET_GROUPS = "api/get_groups"
+        const val JOIN_GROUP_WITH_CODE = "api/join_group_with_code"
         const val GET_GROUP_DETAILS = "api/get_group_details/{group_id}"
         const val SET_GROUP_SETTING = "api/set_group_setting/{group_id}"
         const val SEND_GROUP_REQUEST = "api/send_group_request/{group_id}"

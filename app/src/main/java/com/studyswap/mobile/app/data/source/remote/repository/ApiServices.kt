@@ -5,6 +5,7 @@ import com.studyswap.mobile.app.data.source.remote.model.*
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface ApiServices {
     @POST(EndPoints.Auth.SIGNUP)
@@ -31,6 +32,12 @@ interface ApiServices {
 
     @retrofit2.http.GET(EndPoints.Group.GET_GROUPS)
     suspend fun getGroups(): Response<GetGroupsResponse>
+
+    @retrofit2.http.Multipart
+    @POST(EndPoints.Group.JOIN_GROUP_WITH_CODE)
+    suspend fun joinGroupWithCode(
+        @Part("invitation_code") invitationCode: okhttp3.RequestBody
+    ): Response<JoinGroupWithCodeResponse>
 
     @retrofit2.http.GET(EndPoints.Group.GET_GROUP_DETAILS)
     suspend fun getGroupDetails(
@@ -81,4 +88,3 @@ interface ApiServices {
         @retrofit2.http.Path("group_id") groupId: Int
     ): Response<GenerateInviteLinkResponse>
 }
-

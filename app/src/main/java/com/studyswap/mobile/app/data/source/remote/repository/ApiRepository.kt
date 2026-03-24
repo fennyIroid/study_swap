@@ -22,6 +22,10 @@ interface ApiRepository {
 
     suspend fun getGroups(): Flow<NetworkResult<GetGroupsResponse>>
 
+    suspend fun joinGroupWithCode(
+        invitation_code: String
+    ): Flow<NetworkResult<JoinGroupWithCodeResponse>>
+
     suspend fun getGroupDetails(groupId: Int): Flow<NetworkResult<GetGroupDetailsResponse>>
 
     suspend fun setGroupSettings(
@@ -56,4 +60,3 @@ interface ApiRepository {
         groupId: Int
     ): Flow<NetworkResult<GenerateInviteLinkResponse>>
 }
-

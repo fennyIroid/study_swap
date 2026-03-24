@@ -192,7 +192,7 @@ private fun JoinGroupContent(
                 value = uiState.inviteCode,
                 onValueChange = { event(JoinGroupUiEvent.OnInviteCodeChange(it)) },
                 label = { Text("Group Invite Code") },
-                placeholder = { Text("e.g. SWAP-2023") },
+                placeholder = { Text("e.g. AB12CD") },
                 trailingIcon = {
                     IconButton(onClick = { event(JoinGroupUiEvent.OnPasteOrQrClick) }) {
                         Icon(
@@ -212,6 +212,12 @@ private fun JoinGroupContent(
                     focusedLabelColor = TextMutedGray,
                     unfocusedLabelColor = TextMutedGray
                 ),
+                supportingText = {
+                    Text(
+                        text = "Enter the 6-character invitation code shared by your group.",
+                        color = TextMutedGray
+                    )
+                },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))

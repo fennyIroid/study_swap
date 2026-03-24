@@ -6,8 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.studyswap.ui.splash.SplashScreen
-import com.example.studyswap.ui.welcome.WelcomeScreen
+import com.studyswap.mobile.app.ux.startup.splash.SplashScreen
+import com.studyswap.mobile.app.ux.startup.welcome.WelcomeScreen
 import com.studyswap.mobile.app.ux.container.groupdetails.GroupDetailsRoute
 import com.studyswap.mobile.app.ux.container.groupdetails.GroupDetailsScreen
 import com.studyswap.mobile.app.ux.container.joingroup.JoinGroupRoute
@@ -20,6 +20,8 @@ import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialRoute
 import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialScreen
 import com.studyswap.mobile.app.ux.main.home.HomeRoute
 import com.studyswap.mobile.app.ux.main.home.HomeScreen
+import com.studyswap.mobile.app.ux.main.groups.GroupsRoute
+import com.studyswap.mobile.app.ux.main.groups.GroupsScreen
 import com.studyswap.mobile.app.ux.main.marketplace.MarketplaceHomeScreen
 import com.studyswap.mobile.app.ux.main.marketplace.MarketplaceRoute
 import com.studyswap.mobile.app.ux.sample.BaseRoute
@@ -65,6 +67,9 @@ fun AppStartupGraph(
         composable(HomeRoute.routeDefinition.value) {
             HomeScreen(navController = navController)
         }
+        composable(GroupsRoute.routeDefinition.value) {
+            GroupsScreen(navController = navController)
+        }
         composable(MarketplaceRoute.routeDefinition.value) {
             MarketplaceHomeScreen(navController = navController)
         }
@@ -85,6 +90,12 @@ fun AppStartupGraph(
         }
         composable(UploadMaterialRoute.routeDefinition.value) {
             UploadMaterialScreen(navController = navController)
+        }
+        composable(
+            route = MarketplaceItemDetailRoute.routeDefinition.value,
+            arguments = MarketplaceItemDetailRoute.getArguments()
+        ) {
+            MarketplaceItemDetailScreen(navController = navController)
         }
         composable(BaseRoute.routeDefinition.value) {
             BaseScreen()

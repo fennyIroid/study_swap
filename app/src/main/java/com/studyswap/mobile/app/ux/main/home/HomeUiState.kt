@@ -1,20 +1,37 @@
 package com.studyswap.mobile.app.ux.main.home
 
-import com.studyswap.mobile.app.data.source.remote.model.GroupData
 import kotlinx.coroutines.flow.StateFlow
 
 data class HomeUiDataState(
+    val userName: String = "Alex",
     val isLoading: Boolean = false,
-    val allGroups: List<GroupData> = emptyList(),
-    val myGroups: List<GroupData> = emptyList(),
-    val errorMessage: String? = null,
-    val selectedFilter: String = "All"
+    val recentMaterials: List<RecentMaterial> = emptyList(),
+    val trendingProducts: List<TrendingProduct> = emptyList(),
+    val errorMessage: String? = null
+)
+
+data class RecentMaterial(
+    val id: Int,
+    val title: String,
+    val department: String,
+    val pageCount: Int,
+    val progress: Float // 0f to 1f
+)
+
+data class TrendingProduct(
+    val id: Int,
+    val title: String,
+    val price: Double,
+    val rating: Double,
+    val imageUrl: String? = null
 )
 
 sealed class HomeUiEvent {
-    object LoadGroups : HomeUiEvent()
-    data class OnFilterChanged(val filter: String) : HomeUiEvent()
-    object OnDismissError : HomeUiEvent()
+    object LoadHomeData : HomeUiEvent()
+    object OnUploadClick : HomeUiEvent()
+    object OnFindMaterialsClick : HomeUiEvent()
+    data class OnMaterialClick(val id: Int) : HomeUiEvent()
+    data class OnProductClick(val id: Int) : HomeUiEvent()
 }
 
 data class HomeUiState(

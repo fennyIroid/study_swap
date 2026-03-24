@@ -1,4 +1,4 @@
-package com.example.studyswap.ui.components
+package com.studyswap.mobile.app.ui.compose.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

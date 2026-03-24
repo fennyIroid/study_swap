@@ -38,7 +38,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.studyswap.mobile.app.navigation.HandleNavigation
 import com.studyswap.mobile.app.ui.theme.*
-import com.example.studyswap.ui.components.BottomNavigationBar
+import com.studyswap.mobile.app.ui.compose.common.BottomNavigationBar
 
 @Composable
 fun ProfileScreen(
@@ -61,15 +61,17 @@ private fun ProfileScreenContent(
 ) {
     val scrollState = rememberScrollState()
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
-        containerColor = BackgroundOffWhite
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundOffWhite)
+            .statusBarsPadding()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .padding(bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. Header with Settings
@@ -278,6 +280,11 @@ private fun ProfileScreenContent(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = PrimaryOlive)
             }
+        }
+
+        // Floating bottom nav bar overlay
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            BottomNavigationBar(navController)
         }
     }
 }

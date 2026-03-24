@@ -137,6 +137,33 @@ class ApiRepositoryImpl @Inject constructor(
         emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
     }.flowOn(Dispatchers.IO)
 
+    override suspend fun joinGroupWithCode(
+        invitationCode: String
+    ): Flow<NetworkResult<JoinGroupWithCodeResponse>> = flow {
+        try {
+            val textMediaType = "text/plain".toMediaTypeOrNull()
+            val invitationCodeBody = invitationCode.toRequestBody(textMediaType)
+            val response = apiServices.joinGroupWithCode(invitationCodeBody)
+
+            if (response.isSuccessful && response.body() != null) {
+                emit(NetworkResult.Success(response.body()))
+            } else {
+                emit(NetworkResult.Error(response.errorBody().extractError()))
+            }
+        } catch (e: IOException) {
+            emit(NetworkResult.Error("Please check your network connection"))
+        } catch (e: HttpException) {
+            if (e.code() == 401) emit(NetworkResult.UnAuthenticated(e.message))
+            else emit(NetworkResult.Error(e.message()))
+        } catch (e: Exception) {
+            emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+        }
+    }.onStart { emit(NetworkResult.Loading()) }
+        .catch { e ->
+            emit(NetworkResult.Error(e.message ?: "An unknown error occurred"))
+        }
+        .flowOn(Dispatchers.IO)
+
     override suspend fun getGroupDetails(groupId: Int): Flow<NetworkResult<GetGroupDetailsResponse>> =
         flow {
             try {

@@ -1,4 +1,4 @@
-package com.studyswap.mobile.app.ux.main.home
+package com.studyswap.mobile.app.ux.main.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,13 +8,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val getHomeUiStateUseCase: GetHomeUiStateUseCase
+class GroupsViewModel @Inject constructor(
+    private val getGroupsUiStateUseCase: GetGroupsUiStateUseCase
 ) : ViewModel(), ViewModelNav by ViewModelNavImpl() {
 
-    val uiState: HomeUiState = getHomeUiStateUseCase(viewModelScope)
-
-    init {
-        uiState.event(HomeUiEvent.LoadHomeData)
-    }
+    val uiState: GroupsUiState = getGroupsUiStateUseCase(viewModelScope)
 }

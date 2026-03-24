@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -53,7 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.studyswap.mobile.app.ux.container.marketplaceitemdetail.MarketplaceItemDetailRoute
-import com.example.studyswap.ui.components.BottomNavigationBar
+import com.studyswap.mobile.app.ui.compose.common.BottomNavigationBar
 import com.studyswap.mobile.app.ui.theme.BackgroundOffWhite
 import com.studyswap.mobile.app.ui.theme.PrimaryOlive
 import com.studyswap.mobile.app.ui.theme.SecondaryPeach
@@ -82,16 +83,17 @@ private fun MarketplaceHomeContent(
     event: (MarketplaceHomeUiEvent) -> Unit,
     navController: NavController? = null
 ) {
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
-        containerColor = BackgroundOffWhite
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundOffWhite)
+            .statusBarsPadding()
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .padding(top = 8.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
             item {
                 Header(uiState = uiState, onNotifications = { event(MarketplaceHomeUiEvent.OnNotificationsClick) })
@@ -177,6 +179,11 @@ private fun MarketplaceHomeContent(
             }
 
             item { Spacer(modifier = Modifier.height(18.dp)) }
+        }
+
+        // Floating bottom nav bar overlay
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            BottomNavigationBar(navController)
         }
     }
 }

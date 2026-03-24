@@ -1,4 +1,4 @@
-package com.example.studyswap.ui.splash
+package com.studyswap.mobile.app.ux.startup.splash
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -114,6 +114,7 @@ fun SplashScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Gradients.Background)
+            .systemBarsPadding()
     ) {
         // 🌟 CENTER CONTENT
         Column(

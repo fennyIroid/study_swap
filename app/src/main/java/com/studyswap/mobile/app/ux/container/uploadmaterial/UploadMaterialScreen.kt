@@ -87,6 +87,7 @@ fun UploadMaterialContent(
     }
 
     Scaffold(
+        modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
         topBar = {
             TopAppBar(
                 title = {

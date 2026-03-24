@@ -63,6 +63,7 @@ private fun SignupScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundOffWhite)
+            .statusBarsPadding()
     ) {
         // 1. Top Bar (Pinned)
         Box(

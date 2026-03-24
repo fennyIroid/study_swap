@@ -60,6 +60,7 @@ private fun LoginScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundOffWhite)
+            .statusBarsPadding()
     ) {
         // 0. Back Button (Pinned)
         Box(

@@ -1,10 +1,12 @@
 # ===========================
 # Android Studio / IntelliJ
 # ===========================
-*.iml
 .idea/
 !.idea/codeStyles
 !.idea/runConfigurations
+*.iml
+*.iws
+*.ipr
 
 # ===========================
 # Build output
@@ -63,13 +65,15 @@ local.properties
 captures/
 
 # ===========================
-# OS generated files
+# OS generated files / IDEs
 # ===========================
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+.vscode/
+.kotlin/
 
 # ===========================
 # Kotlin

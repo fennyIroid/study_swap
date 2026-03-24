@@ -5,6 +5,7 @@ import com.studyswap.mobile.app.data.source.remote.model.GroupData
 import com.studyswap.mobile.app.data.source.remote.repository.ApiRepository
 import com.studyswap.mobile.app.navigation.NavigationAction
 import com.studyswap.mobile.app.ux.container.creategroup.CreateGroupRoute
+import com.studyswap.mobile.app.ux.container.groupdetails.GroupDetailsRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,23 +35,27 @@ class GetJoinGroupUiStateUseCase @Inject constructor(
     ) {
         when (event) {
             is JoinGroupUiEvent.OnInviteCodeChange ->
-                _uiDataStateFlow.update { it.copy(inviteCode = event.code) }
+                _uiDataStateFlow.update {
+                    it.copy(
+                        inviteCode = event.code
+                            .uppercase()
+                            .filter(Char::isLetterOrDigit)
+                            .take(6),
+                        errorMessage = null
+                    )
+                }
             is JoinGroupUiEvent.OnJoinWithCodeClick -> {
                 val code = _uiDataStateFlow.value.inviteCode.trim()
                 if (code.isBlank()) {
                     _uiDataStateFlow.update { it.copy(errorMessage = "Please enter an invite code") }
                     return
                 }
+                if (code.length != 6) {
+                    _uiDataStateFlow.update { it.copy(errorMessage = "Invite code must be 6 characters") }
+                    return
+                }
                 coroutineScope.launch {
-                    _uiDataStateFlow.update { it.copy(isJoinByCodeLoading = true) }
-                    // TODO: replace with API joinByInviteCode(code) when available
-                    kotlinx.coroutines.delay(800)
-                    _uiDataStateFlow.update {
-                        it.copy(
-                            isJoinByCodeLoading = false,
-                            errorMessage = "Join by code is not yet available"
-                        )
-                    }
+                    joinGroupWithCode(code, navigate)
                 }
             }
             is JoinGroupUiEvent.OnBackClick -> navigate(NavigationAction.Pop())
@@ -78,6 +83,48 @@ class GetJoinGroupUiStateUseCase @Inject constructor(
                 _uiDataStateFlow.update { it.copy(errorMessage = null) }
             is JoinGroupUiEvent.OnPasteOrQrClick -> {
                 // TODO: open clipboard paste or QR scanner
+            }
+        }
+    }
+
+    private suspend fun joinGroupWithCode(
+        code: String,
+        navigate: (NavigationAction) -> Unit
+    ) {
+        apiRepository.joinGroupWithCode(code).collect { result ->
+            when (result) {
+                is NetworkResult.Loading ->
+                    _uiDataStateFlow.update {
+                        it.copy(isJoinByCodeLoading = true, errorMessage = null)
+                    }
+                is NetworkResult.Success -> {
+                    val joinedGroupId = result.data?.data?.id
+                    _uiDataStateFlow.update {
+                        it.copy(
+                            isJoinByCodeLoading = false,
+                            inviteCode = "",
+                            errorMessage = null
+                        )
+                    }
+                    fetchGroups()
+                    if (joinedGroupId != null) {
+                        navigate(NavigationAction.Navigate(GroupDetailsRoute.createRoute(joinedGroupId)))
+                    }
+                }
+                is NetworkResult.Error ->
+                    _uiDataStateFlow.update {
+                        it.copy(
+                            isJoinByCodeLoading = false,
+                            errorMessage = result.message ?: "Failed to join group"
+                        )
+                    }
+                is NetworkResult.UnAuthenticated ->
+                    _uiDataStateFlow.update {
+                        it.copy(
+                            isJoinByCodeLoading = false,
+                            errorMessage = "Session expired. Please log in again."
+                        )
+                    }
             }
         }
     }

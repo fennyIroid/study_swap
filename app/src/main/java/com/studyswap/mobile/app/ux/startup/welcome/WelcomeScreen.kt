@@ -1,4 +1,4 @@
-package com.example.studyswap.ui.welcome
+package com.studyswap.mobile.app.ux.startup.welcome
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,10 +39,12 @@ fun WelcomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Gradients.Background)
+            .statusBarsPadding()
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top illustration area – use a themed composable instead of a bitmap
