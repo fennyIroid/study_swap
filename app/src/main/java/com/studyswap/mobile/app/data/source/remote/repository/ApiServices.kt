@@ -17,17 +17,14 @@ interface ApiServices {
     @POST(EndPoints.Auth.GET_USER_INFO)
     suspend fun getUserInfo(@Body request: UserInfoRequest): Response<UserInfoResponse>
 
-    @retrofit2.http.Multipart
+    @retrofit2.http.FormUrlEncoded
     @POST(EndPoints.Group.CREATE_GROUP)
     suspend fun createGroup(
-        @retrofit2.http.Part("name") name: okhttp3.RequestBody,
-        @retrofit2.http.Part("description") description: okhttp3.RequestBody,
-        @retrofit2.http.Part("group_type") groupType: okhttp3.RequestBody,
-        @retrofit2.http.Part("subject") subject: okhttp3.RequestBody,
-        @retrofit2.http.Part("max_members") maxMembers: okhttp3.RequestBody,
-        @retrofit2.http.Part("is_public") isPublic: okhttp3.RequestBody,
-        @retrofit2.http.Part("approval_required") approvalRequired: okhttp3.RequestBody,
-        @retrofit2.http.Part groupIcon: okhttp3.MultipartBody.Part?
+        @retrofit2.http.Field("name") name: String,
+        @retrofit2.http.Field("description") description: String,
+        @retrofit2.http.Field("group_type") groupType: String,
+        @retrofit2.http.Field("subject") subject: String,
+        @retrofit2.http.Field("max_members") maxMembers: Int
     ): Response<CreateGroupResponse>
 
     @retrofit2.http.GET(EndPoints.Group.GET_GROUPS)

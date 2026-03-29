@@ -77,28 +77,11 @@ class ApiRepositoryImpl @Inject constructor(
         description: String,
         groupType: String,
         subject: String,
-        maxMembers: Int,
-        isPublic: Int,
-        approvalRequired: Int,
-        groupIcon: java.io.File?
+        maxMembers: Int
     ): Flow<NetworkResult<CreateGroupResponse>> = flow {
         try {
-            val textMediaType = "text/plain".toMediaTypeOrNull()
-            val nameBody = name.toRequestBody(textMediaType)
-            val descBody = description.toRequestBody(textMediaType)
-            val typeBody = groupType.toRequestBody(textMediaType)
-            val subBody = subject.toRequestBody(textMediaType)
-            val maxBody = maxMembers.toString().toRequestBody(textMediaType)
-            val publicBody = isPublic.toString().toRequestBody(textMediaType)
-            val approvalBody = approvalRequired.toString().toRequestBody(textMediaType)
-            
-            val iconPart = groupIcon?.let { file ->
-                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                okhttp3.MultipartBody.Part.createFormData("group_icon", file.name, requestFile)
-            }
-
             val response = apiServices.createGroup(
-                nameBody, descBody, typeBody, subBody, maxBody, publicBody, approvalBody, iconPart
+                name, description, groupType, subject, maxMembers
             )
 
             if (response.isSuccessful && response.body() != null) {

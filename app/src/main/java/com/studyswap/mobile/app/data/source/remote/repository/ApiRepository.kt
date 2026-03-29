@@ -14,10 +14,7 @@ interface ApiRepository {
         description: String,
         groupType: String,
         subject: String,
-        maxMembers: Int,
-        isPublic: Int,
-        approvalRequired: Int,
-        groupIcon: java.io.File?
+        maxMembers: Int
     ): Flow<NetworkResult<CreateGroupResponse>>
 
     suspend fun getGroups(): Flow<NetworkResult<GetGroupsResponse>>

@@ -58,12 +58,6 @@ fun CreateGroupContent(
 ) {
     val scrollState = rememberScrollState()
 
-    // Image Picker Launcher
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        event(CreateGroupUiEvent.OnIconSelected(uri))
-    }
 
     Scaffold(
         topBar = {
@@ -102,78 +96,7 @@ fun CreateGroupContent(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Upload Group Icon
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clickable { imagePickerLauncher.launch("image/*") },
-                contentAlignment = Alignment.Center
-            ) {
-                if (uiState.groupIconUri != null) {
-                    AsyncImage(
-                        model = uiState.groupIconUri,
-                        contentDescription = "Selected Icon",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(24.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Transparent, RoundedCornerShape(24.dp))
-                            .border(
-                                width = 2.dp,
-                                color = PrimaryOlive.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                    ) {
-                         // Dashed border effect
-                        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawRoundRect(
-                                color = PrimaryOlive.copy(alpha = 0.5f),
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                    width = 4f,
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-                                )
-                            )
-                        }
-                    }
-                    Icon(
-                        imageVector = Icons.Default.AddPhotoAlternate,
-                        contentDescription = "Upload Icon",
-                        tint = PrimaryOlive.copy(alpha = 0.5f),
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
 
-                // Edit Box icon
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 8.dp, y = 8.dp)
-                        .background(SecondaryPeach, CircleShape)
-                        .padding(6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit",
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Upload Group Icon",
-                color = PrimaryOlive,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
 
             // Form Fields
             FormSectionLabel("GROUP NAME")
@@ -214,35 +137,21 @@ fun CreateGroupContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FormSectionLabel("SEMESTER")
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(24.dp))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val semesters = listOf("Fall '23", "Spring '24", "Summer")
-                semesters.forEach { sem ->
-                    val isSelected = uiState.semester == sem
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (isSelected) PrimaryOlive else Color.Transparent)
-                            .clickable { event(CreateGroupUiEvent.OnSemesterChange(sem)) }
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = sem,
-                            color = if (isSelected) Color.White else TextMutedGray,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
+            FormSectionLabel("MAX MEMBERS")
+            OutlinedTextField(
+                value = uiState.maxMembers,
+                onValueChange = { event(CreateGroupUiEvent.OnMaxMembersChange(it)) },
+                placeholder = { Text("e.g., 10", color = TextMutedGray.copy(alpha=0.5f)) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = PrimaryOlive,
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number, imeAction = ImeAction.Next)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -280,41 +189,7 @@ fun CreateGroupContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Private Group Switch
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(24.dp))
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(BackgroundOffWhite, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock", tint = PrimaryOlive, modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Private Group", fontWeight = FontWeight.Bold, color = TextCharcoal)
-                    Text("Only people with the link can join.", fontSize = 12.sp, color = TextMutedGray)
-                }
-                Switch(
-                    checked = uiState.isPrivate,
-                    onCheckedChange = { event(CreateGroupUiEvent.OnPrivateChange(it)) },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = PrimaryOlive,
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFFE0E0E0),
-                        uncheckedBorderColor = Color.Transparent
-                    )
-                )
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = { event(CreateGroupUiEvent.OnCreateClick) },

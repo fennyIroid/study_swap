@@ -36,31 +36,23 @@ class GetCreateGroupUiStateUseCase @Inject constructor(
         when (event) {
             is CreateGroupUiEvent.OnGroupNameChange -> _uiDataStateFlow.update { it.copy(groupName = event.name) }
             is CreateGroupUiEvent.OnSubjectChange -> _uiDataStateFlow.update { it.copy(subject = event.subject) }
-            is CreateGroupUiEvent.OnSemesterChange -> _uiDataStateFlow.update { it.copy(semester = event.semester) }
+            is CreateGroupUiEvent.OnMaxMembersChange -> _uiDataStateFlow.update { it.copy(maxMembers = event.maxMembers) }
             is CreateGroupUiEvent.OnDescriptionChange -> _uiDataStateFlow.update { it.copy(description = event.description) }
-            is CreateGroupUiEvent.OnPrivateChange -> _uiDataStateFlow.update { it.copy(isPrivate = event.isPrivate) }
-            is CreateGroupUiEvent.OnIconSelected -> _uiDataStateFlow.update { it.copy(groupIconUri = event.uri) }
             is CreateGroupUiEvent.OnCreateClick -> {
                 val state = _uiDataStateFlow.value
                 if (state.groupName.isBlank() || state.subject.isBlank()) {
                     _uiDataStateFlow.update { it.copy(errorMessage = "Group Name and Subject are required") }
                     return
                 }
+                val maxMembersInt = state.maxMembers.toIntOrNull() ?: 10
 
                 coroutineScope.launch {
-                    val file = getFileFromUri(context, state.groupIconUri)
-                    val isPublic = if (state.isPrivate) 0 else 1
-                    val approvalReq = if (state.isPrivate) 1 else 0
-
                     apiRepository.createGroup(
                         name = state.groupName,
                         description = state.description,
                         groupType = "study",
                         subject = state.subject,
-                        maxMembers = 10,
-                        isPublic = isPublic,
-                        approvalRequired = approvalReq,
-                        groupIcon = file
+                        maxMembers = maxMembersInt
                     ).collect { result ->
                         when (result) {
                             is NetworkResult.Loading -> _uiDataStateFlow.update { it.copy(isLoading = true) }
@@ -80,21 +72,6 @@ class GetCreateGroupUiStateUseCase @Inject constructor(
             }
             is CreateGroupUiEvent.OnBackClick -> navigate(NavigationAction.Pop())
             is CreateGroupUiEvent.OnDismissError -> _uiDataStateFlow.update { it.copy(errorMessage = null) }
-        }
-    }
-
-    private fun getFileFromUri(context: Context, uri: Uri?): File? {
-        if (uri == null) return null
-        return try {
-            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-            val tempFile = File(context.cacheDir, "upload_icon_${System.currentTimeMillis()}.jpg")
-            val outputStream = java.io.FileOutputStream(tempFile)
-            inputStream.copyTo(outputStream)
-            inputStream.close()
-            outputStream.close()
-            tempFile
-        } catch (e: Exception) {
-            null
         }
     }
 }

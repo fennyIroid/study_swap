@@ -12,7 +12,6 @@ class RequestInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val builder = request.newBuilder()
-            .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json")
         runBlocking {
             val token = appPreferenceDataStore.getUserToken()
