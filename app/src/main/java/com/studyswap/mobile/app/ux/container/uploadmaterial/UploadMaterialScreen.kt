@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,9 +35,6 @@ import com.studyswap.mobile.app.ui.theme.StudySwapTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.studyswap.mobile.app.navigation.HandleNavigation
 import com.studyswap.mobile.app.ui.theme.*
-
-private val categories = listOf("Notes", "Textbook", "Past Papers", "Slides", "Other")
-private val semesters = listOf("Fall '24", "Spring '25", "Summer", "Fall '25", "Spring '26")
 
 @Composable
 fun UploadMaterialScreen(
@@ -48,23 +47,36 @@ fun UploadMaterialScreen(
     val event = viewModel.uiState.event
     val context = LocalContext.current
 
+    val resolveName: (Uri?) -> String? = { uri ->
+        uri?.let {
+            context.contentResolver.query(it, null, null, null, null)?.use { c ->
+                val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (i >= 0 && c.moveToFirst()) c.getString(i) else null
+            }
+        }
+    }
+
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        val fileName = uri?.let {
-            context.contentResolver.query(it, null, null, null, null)?.use { c ->
-                c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME).let { i ->
-                    if (i >= 0) c.getString(i) else null
-                }
-            }
-        }
-        event(UploadMaterialUiEvent.OnFileSelected(uri, fileName))
+        event(UploadMaterialUiEvent.OnFileSelected(uri, resolveName(uri)))
+    }
+
+    val thumbPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        event(UploadMaterialUiEvent.OnThumbnailSelected(uri, resolveName(uri)))
+    }
+
+    LaunchedEffect(Unit) {
+        event(UploadMaterialUiEvent.Load)
     }
 
     UploadMaterialContent(
         uiState = uiState,
         event = event,
-        onPickFile = { filePickerLauncher.launch("*/*") }
+        onPickFile = { filePickerLauncher.launch("*/*") },
+        onPickThumbnail = { thumbPickerLauncher.launch("image/*") }
     )
 }
 
@@ -73,11 +85,10 @@ fun UploadMaterialScreen(
 fun UploadMaterialContent(
     uiState: UploadMaterialUiDataState,
     event: (UploadMaterialUiEvent) -> Unit,
-    onPickFile: () -> Unit
+    onPickFile: () -> Unit,
+    onPickThumbnail: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
-    var categoryExpanded by remember { mutableStateOf(false) }
-    var semesterExpanded by remember { mutableStateOf(false) }
 
     uiState.errorMessage?.let { msg ->
         LaunchedEffect(msg) {
@@ -162,7 +173,7 @@ fun UploadMaterialContent(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "PDF, DOCX, JPG (MAX 25MB)",
+                        text = "PDF, DOC, PPT, ZIP (max 50MB)",
                         color = TextMutedGray,
                         fontSize = 12.sp
                     )
@@ -215,63 +226,10 @@ fun UploadMaterialContent(
                 color = TextCharcoal
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = uiState.selectedCategory,
-                    onValueChange = {},
-                    readOnly = true,
-                    placeholder = { Text("Select Category", color = TextMutedGray.copy(alpha = 0.7f)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = true) { categoryExpanded = true },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = PrimaryOlive,
-                        unfocusedTextColor = TextCharcoal,
-                        focusedTextColor = TextCharcoal
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Open",
-                            tint = TextMutedGray
-                        )
-                    }
-                )
-                DropdownMenu(
-                    expanded = categoryExpanded,
-                    onDismissRequest = { categoryExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.85f)
-                ) {
-                    categories.forEach { cat ->
-                        DropdownMenuItem(
-                            text = { Text(cat, color = TextCharcoal) },
-                            onClick = {
-                                event(UploadMaterialUiEvent.OnCategorySelect(cat))
-                                categoryExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Subject Code
-            Text(
-                text = "Subject Code",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextCharcoal
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = uiState.subjectCode,
-                onValueChange = { event(UploadMaterialUiEvent.OnSubjectCodeChange(it)) },
-                placeholder = { Text("Search subject (e.g., CS50)", color = TextMutedGray.copy(alpha = 0.7f)) },
+                value = uiState.category,
+                onValueChange = { event(UploadMaterialUiEvent.OnCategoryChange(it)) },
+                placeholder = { Text("e.g. Computer Science", color = TextMutedGray.copy(alpha = 0.7f)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -282,60 +240,116 @@ fun UploadMaterialContent(
                     unfocusedTextColor = TextCharcoal,
                     focusedTextColor = TextCharcoal
                 ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
+            if (uiState.suggestedCategories.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Suggestions",
+                    fontSize = 12.sp,
+                    color = TextMutedGray,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(uiState.suggestedCategories) { cat ->
+                        FilterChip(
+                            selected = false,
+                            onClick = { event(UploadMaterialUiEvent.OnSuggestionPick(cat)) },
+                            label = { Text(cat, maxLines = 1, fontSize = 12.sp) },
+                            border = FilterChipDefaults.filterChipBorder(
+                                borderColor = TextMutedGray.copy(alpha = 0.3f),
+                                selectedBorderColor = Color.Transparent,
+                                enabled = true,
+                                selected = false
+                            )
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Semester
             Text(
-                text = "Semester",
+                text = "Description",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextCharcoal
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = uiState.selectedSemester,
-                    onValueChange = {},
-                    readOnly = true,
-                    placeholder = { Text("Select Semester", color = TextMutedGray.copy(alpha = 0.7f)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = true) { semesterExpanded = true },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = PrimaryOlive,
-                        unfocusedTextColor = TextCharcoal,
-                        focusedTextColor = TextCharcoal
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Open",
-                            tint = TextMutedGray
-                        )
-                    }
+            OutlinedTextField(
+                value = uiState.description,
+                onValueChange = { event(UploadMaterialUiEvent.OnDescriptionChange(it)) },
+                placeholder = { Text("Describe what buyers will get", color = TextMutedGray.copy(alpha = 0.7f)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = PrimaryOlive,
+                    unfocusedTextColor = TextCharcoal,
+                    focusedTextColor = TextCharcoal
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Price (optional)",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = uiState.price,
+                onValueChange = { event(UploadMaterialUiEvent.OnPriceChange(it)) },
+                placeholder = { Text("0.00 — leave empty for free", color = TextMutedGray.copy(alpha = 0.7f)) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = PrimaryOlive,
+                    unfocusedTextColor = TextCharcoal,
+                    focusedTextColor = TextCharcoal
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Done
                 )
-                DropdownMenu(
-                    expanded = semesterExpanded,
-                    onDismissRequest = { semesterExpanded = false },
-                    modifier = Modifier.fillMaxWidth(0.85f)
-                ) {
-                    semesters.forEach { sem ->
-                        DropdownMenuItem(
-                            text = { Text(sem, color = TextCharcoal) },
-                            onClick = {
-                                event(UploadMaterialUiEvent.OnSemesterSelect(sem))
-                                semesterExpanded = false
-                            }
-                        )
-                    }
-                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Thumbnail (optional)",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(1.dp, TextMutedGray.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.5f))
+                    .clickable(onClick = onPickThumbnail),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = uiState.thumbnailName ?: "Tap to add JPG / PNG (max 5MB)",
+                    color = TextMutedGray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -350,19 +364,27 @@ fun UploadMaterialContent(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryOlive),
                 enabled = !uiState.isLoading
             ) {
-                Text(
-                    text = "Upload Material",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Upload Material",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             if (uiState.errorMessage != null) {
@@ -385,16 +407,10 @@ fun UploadMaterialContent(
 private fun UploadMaterialScreenPreview() {
     StudySwapTheme {
         UploadMaterialContent(
-            uiState = UploadMaterialUiDataState(
-                materialTitle = "",
-                selectedCategory = "",
-                subjectCode = "",
-                selectedSemester = "",
-                selectedFileUri = null,
-                selectedFileName = null
-            ),
+            uiState = UploadMaterialUiDataState(),
             event = {},
-            onPickFile = {}
+            onPickFile = {},
+            onPickThumbnail = {}
         )
     }
 }

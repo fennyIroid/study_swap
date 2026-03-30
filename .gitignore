@@ -72,7 +72,6 @@ captures/
 ._*
 .Spotlight-V100
 .Trashes
-.vscode/
 .kotlin/
 
 # ===========================
@@ -84,3 +83,7 @@ captures/
 # Misc
 # ===========================
 *.hprof
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore

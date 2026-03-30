@@ -62,6 +62,17 @@ fun GroupsScreen(
     val uiState by viewModel.uiState.uiDataStateFlow.collectAsStateWithLifecycle()
     val event = viewModel.uiState.event
 
+    val sectionTitle = when (uiState.selectedFilter) {
+        "My Groups" -> "Your groups"
+        "Discover" -> "Discover"
+        else -> "All groups"
+    }
+    val browseList = when (uiState.selectedFilter) {
+        "My Groups" -> uiState.joinedGroups
+        else -> uiState.allGroups
+    }
+    val showJoinOnCards = uiState.selectedFilter != "My Groups"
+
     // Refresh groups every time this screen resumes
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -259,10 +270,69 @@ fun GroupsScreen(
 
             // Filter Chips
             item {
-                FilterChips()
+                FilterChips(
+                    selectedFilter = uiState.selectedFilter,
+                    onFilterSelected = { event(GroupsUiEvent.OnFilterChanged(it)) }
+                )
             }
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
+
+            uiState.infoMessage?.let { msg ->
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(PrimaryOlive.copy(alpha = 0.15f))
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = msg,
+                            modifier = Modifier.weight(1f),
+                            color = TextCharcoal,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "OK",
+                            color = PrimaryOlive,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            modifier = Modifier.clickable { event(GroupsUiEvent.OnDismissInfo) }
+                        )
+                    }
+                }
+            }
+
+            uiState.errorMessage?.let { err ->
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFF0F0))
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = err,
+                            modifier = Modifier.weight(1f),
+                            color = Color(0xFFB00020),
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "Dismiss",
+                            color = Color(0xFFB00020),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            modifier = Modifier.clickable { event(GroupsUiEvent.OnDismissError) }
+                        )
+                    }
+                }
+            }
 
             // Loading Indicator
             if (uiState.isLoading) {
@@ -276,10 +346,34 @@ fun GroupsScreen(
                 }
             }
 
-            // All Groups Section
+            if (uiState.selectedFilter == "My Groups" && uiState.pendingGroups.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Awaiting approval",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextCharcoal
+                        ),
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                items(uiState.pendingGroups) { group ->
+                    Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
+                        AllGroupCard(
+                            group = group,
+                            navController = navController,
+                            pendingApproval = true
+                        )
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
+
+            // Main list for current filter
             item {
                 Text(
-                    text = "All Groups",
+                    text = sectionTitle,
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = TextCharcoal
@@ -289,10 +383,13 @@ fun GroupsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (uiState.allGroups.isEmpty() && !uiState.isLoading) {
+            if (browseList.isEmpty() && !uiState.isLoading) {
                 item {
                     Text(
-                        text = "No groups found. Be the first to create one!",
+                        text = when (uiState.selectedFilter) {
+                            "My Groups" -> "You have not joined any groups yet."
+                            else -> "No groups found. Be the first to create one!"
+                        },
                         color = TextMutedGray,
                         fontSize = 14.sp,
                         modifier = Modifier
@@ -302,9 +399,17 @@ fun GroupsScreen(
                     )
                 }
             } else {
-                items(uiState.allGroups) { group ->
+                items(browseList) { group ->
+                    val gid = group.id
                     Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                        AllGroupCard(group = group, navController = navController)
+                        AllGroupCard(
+                            group = group,
+                            navController = navController,
+                            onRequestJoin = if (showJoinOnCards && gid != null) {
+                                { event(GroupsUiEvent.OnSendJoinRequest(gid)) }
+                            } else null,
+                            joinRequested = gid != null && gid in uiState.requestedGroupIds
+                        )
                     }
                 }
             }
@@ -322,7 +427,10 @@ fun GroupsScreen(
 @Composable
 fun AllGroupCard(
     group: GroupData,
-    navController: NavController? = null
+    navController: NavController? = null,
+    onRequestJoin: (() -> Unit)? = null,
+    joinRequested: Boolean = false,
+    pendingApproval: Boolean = false
 ) {
     val iconInitial = group.name?.firstOrNull()?.uppercaseChar()?.toString() ?: "G"
     val iconColor = if ((group.id ?: 0) % 2 == 0) PrimaryOlive else SecondaryPeach
@@ -379,18 +487,35 @@ fun AllGroupCard(
                     }
                 }
             }
-            Box(
-                modifier = Modifier
-                    .clickable { navController?.navigate(com.studyswap.mobile.app.ux.container.joingroup.JoinGroupRoute.routeDefinition.value) }
-                    .background(PrimaryOlive.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = "Join",
-                    color = PrimaryOlive,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
+            when {
+                pendingApproval -> {
+                    Text(
+                        text = "Pending",
+                        color = TextMutedGray,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+                onRequestJoin != null -> {
+                    Box(
+                        modifier = Modifier
+                            .clickable(enabled = !joinRequested) { onRequestJoin() }
+                            .background(
+                                if (joinRequested) Color.LightGray.copy(alpha = 0.35f) else PrimaryOlive.copy(alpha = 0.1f),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = if (joinRequested) "Requested" else "Join",
+                            color = if (joinRequested) TextMutedGray else PrimaryOlive,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+                else -> Unit
             }
         }
     }

@@ -2,8 +2,6 @@ package com.studyswap.mobile.app.ux.main.marketplace
 
 import kotlinx.coroutines.flow.StateFlow
 
-enum class MarketplaceCategory { COMPUTER_SCIENCE, MATH, HISTORY }
-
 data class TrendingNoteItem(
     val id: String,
     val title: String,
@@ -25,10 +23,12 @@ data class FreshMaterialItem(
 )
 
 data class MarketplaceHomeUiDataState(
-    val userName: String = "Alex Student",
+    val userName: String = "",
     val greetingEmoji: String = "👋",
     val searchQuery: String = "",
-    val selectedCategory: MarketplaceCategory = MarketplaceCategory.COMPUTER_SCIENCE,
+    /** `null` means no category filter (all). */
+    val selectedCategory: String? = null,
+    val apiCategories: List<String> = emptyList(),
     val trendingNotes: List<TrendingNoteItem> = emptyList(),
     val freshMaterials: List<FreshMaterialItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -37,8 +37,10 @@ data class MarketplaceHomeUiDataState(
 
 sealed class MarketplaceHomeUiEvent {
     object Load : MarketplaceHomeUiEvent()
+    object RefreshMaterials : MarketplaceHomeUiEvent()
     data class OnSearchChange(val query: String) : MarketplaceHomeUiEvent()
-    data class OnCategorySelected(val category: MarketplaceCategory) : MarketplaceHomeUiEvent()
+    /** Pass `null` for “All categories”. */
+    data class OnCategorySelected(val category: String?) : MarketplaceHomeUiEvent()
     object OnTrendingSeeAll : MarketplaceHomeUiEvent()
     object OnFreshSeeAll : MarketplaceHomeUiEvent()
     data class OnTrendingClick(val id: String) : MarketplaceHomeUiEvent()
