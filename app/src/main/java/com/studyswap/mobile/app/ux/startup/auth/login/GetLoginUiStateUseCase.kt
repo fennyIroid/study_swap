@@ -77,14 +77,10 @@ class GetLoginUiStateUseCase @Inject constructor(
                                     val loginData = result.data
                                     loginData?.token?.let { dataStore.saveUserToken(it) }
 
-                                    val userId = loginData?.userId
-                                    
-                                    if (userId != null) {
-                                        coroutineScope.launch {
-                                            apiRepository.getUserInfo(UserInfoRequest(userId)).collect { infoResult ->
-                                                if (infoResult is NetworkResult.Success) {
-                                                    infoResult.data?.userData?.let { dataStore.saveUserData(it) }
-                                                }
+                                    coroutineScope.launch {
+                                        apiRepository.getUserInfo().collect { infoResult ->
+                                            if (infoResult is NetworkResult.Success) {
+                                                infoResult.data?.userData?.let { dataStore.saveUserData(it) }
                                             }
                                         }
                                     }

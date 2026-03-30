@@ -1,11 +1,13 @@
 package com.studyswap.mobile.app.ux.container.profile
 
 import android.content.Context
+import android.net.Uri
 import com.studyswap.mobile.app.data.source.local.datastore.AppPreferenceDataStore
 import com.studyswap.mobile.app.data.source.remote.helper.NetworkResult
-import com.studyswap.mobile.app.data.source.remote.model.UserInfoRequest
 import com.studyswap.mobile.app.data.source.remote.repository.ApiRepository
 import com.studyswap.mobile.app.navigation.NavigationAction
+import com.studyswap.mobile.app.utils.asMultipartPart
+import com.studyswap.mobile.app.ux.container.mymaterials.MyMaterialsRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -41,11 +43,8 @@ class GetProfileUiStateUseCase @Inject constructor(
                 _profileUiDataStateFlow.update { it.copy(userData = cachedUser) }
             }
 
-            // 2. Fetch fresh data from API
-            val userId = cachedUser?.id ?: return@launch
-            // If userId is null, we stop here. Do NOT use hardcoded IDs.
-            val request = UserInfoRequest(userId = userId)
-            apiRepository.getUserInfo(request).collect { result ->
+            // 2. Fetch fresh data for the authenticated user (token only; no user_id in body)
+            apiRepository.getUserInfo().collect { result ->
                 when (result) {
                     is NetworkResult.Loading -> {
                         if (cachedUser == null) _profileUiDataStateFlow.update { it.copy(isLoading = true) }
@@ -79,12 +78,86 @@ class GetProfileUiStateUseCase @Inject constructor(
         navigate: (NavigationAction) -> Unit
     ) {
         when (event) {
+            is ProfileUiEvent.OnProfilePhotoPicked -> coroutineScope.launch {
+                uploadProfilePhoto(context, event.uri)
+            }
             is ProfileUiEvent.OnEditProfileClick -> { /* TODO */ }
-            is ProfileUiEvent.OnUploadedMaterialsClick -> { /* TODO */ }
+            is ProfileUiEvent.OnUploadedMaterialsClick -> {
+                navigate(NavigationAction.Navigate(MyMaterialsRoute.createRoute()))
+            }
             is ProfileUiEvent.OnSavedMaterialsClick -> { /* TODO */ }
             is ProfileUiEvent.OnHelpSupportClick -> { /* TODO */ }
             is ProfileUiEvent.OnSettingsClick -> { /* TODO */ }
             is ProfileUiEvent.OnBackClick -> navigate(NavigationAction.Pop())
+        }
+    }
+
+    private suspend fun uploadProfilePhoto(context: Context, uri: Uri) {
+        _profileUiDataStateFlow.update {
+            it.copy(isUploadingPhoto = true, errorMessage = null)
+        }
+        try {
+            val part = uri.asMultipartPart(context, "photo")
+            apiRepository.updateProfilePhoto(part).collect { result ->
+                when (result) {
+                    is NetworkResult.Loading -> Unit
+                    is NetworkResult.Success -> {
+                        val fresh = result.data?.userData
+                        if (fresh != null) {
+                            dataStore.saveUserData(fresh)
+                            _profileUiDataStateFlow.update {
+                                it.copy(userData = fresh, isUploadingPhoto = false)
+                            }
+                        } else {
+                            refreshUserAfterPhotoUpload()
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        _profileUiDataStateFlow.update {
+                            it.copy(isUploadingPhoto = false, errorMessage = result.message)
+                        }
+                    }
+                    is NetworkResult.UnAuthenticated -> {
+                        _profileUiDataStateFlow.update {
+                            it.copy(isUploadingPhoto = false, errorMessage = "Please sign in again.")
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            _profileUiDataStateFlow.update {
+                it.copy(
+                    isUploadingPhoto = false,
+                    errorMessage = e.message ?: "Could not update photo"
+                )
+            }
+        }
+    }
+
+    private suspend fun refreshUserAfterPhotoUpload() {
+        apiRepository.getUserInfo().collect { result ->
+            when (result) {
+                is NetworkResult.Success -> {
+                    val fresh = result.data?.userData
+                    if (fresh != null) {
+                        dataStore.saveUserData(fresh)
+                        _profileUiDataStateFlow.update {
+                            it.copy(userData = fresh, isUploadingPhoto = false)
+                        }
+                    } else {
+                        _profileUiDataStateFlow.update { it.copy(isUploadingPhoto = false) }
+                    }
+                }
+                is NetworkResult.Error -> {
+                    _profileUiDataStateFlow.update {
+                        it.copy(isUploadingPhoto = false, errorMessage = result.message)
+                    }
+                }
+                is NetworkResult.UnAuthenticated -> {
+                    _profileUiDataStateFlow.update { it.copy(isUploadingPhoto = false) }
+                }
+                else -> Unit
+            }
         }
     }
 }

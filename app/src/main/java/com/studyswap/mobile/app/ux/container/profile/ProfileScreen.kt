@@ -1,5 +1,8 @@
 package com.studyswap.mobile.app.ux.container.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -50,14 +53,26 @@ fun ProfileScreen(
     val uiStateData by viewModel.uiState.profileUiDataStateFlow.collectAsStateWithLifecycle()
     val event = viewModel.uiState.event
 
-    ProfileScreenContent(uiStateData = uiStateData, event = event, navController = navController)
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { event(ProfileUiEvent.OnProfilePhotoPicked(it)) }
+    }
+
+    ProfileScreenContent(
+        uiStateData = uiStateData,
+        event = event,
+        navController = navController,
+        onPickProfilePhoto = { photoPicker.launch("image/*") }
+    )
 }
 
 @Composable
 private fun ProfileScreenContent(
     uiStateData: ProfileUiDataState,
     event: (ProfileUiEvent) -> Unit,
-    navController: NavController? = null
+    navController: NavController? = null,
+    onPickProfilePhoto: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
 
@@ -105,7 +120,9 @@ private fun ProfileScreenContent(
             // 2. Profile Image & Info
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
-                    modifier = Modifier.size(140.dp),
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clickable(onClick = onPickProfilePhoto),
                     shape = CircleShape,
                     border = CardDefaults.outlinedCardBorder(enabled = true),
                     color = Color.LightGray
@@ -131,7 +148,22 @@ private fun ProfileScreenContent(
                         }
                     }
                 }
-                
+                if (uiStateData.isUploadingPhoto) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(140.dp)
+                            .background(Color.Black.copy(alpha = 0.25f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(40.dp),
+                            color = Color.White,
+                            strokeWidth = 3.dp
+                        )
+                    }
+                }
+
                 // Verified Badge
                 Box(
                     modifier = Modifier
@@ -164,6 +196,13 @@ private fun ProfileScreenContent(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextMutedGray
                 )
+            )
+            Text(
+                text = "Tap photo to change",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = TextMutedGray.copy(alpha = 0.8f)
+                ),
+                modifier = Modifier.padding(top = 6.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -418,7 +457,8 @@ fun ProfileScreenPreview() {
     StudySwapTheme {
         ProfileScreenContent(
             uiStateData = ProfileUiDataState(userData = null),
-            event = {}
+            event = {},
+            onPickProfilePhoto = {}
         )
     }
 }

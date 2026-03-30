@@ -16,8 +16,12 @@ import com.studyswap.mobile.app.ux.container.profile.ProfileRoute
 import com.studyswap.mobile.app.ux.container.profile.ProfileScreen
 import com.studyswap.mobile.app.ux.container.marketplaceitemdetail.MarketplaceItemDetailRoute
 import com.studyswap.mobile.app.ux.container.marketplaceitemdetail.MarketplaceItemDetailScreen
+import com.studyswap.mobile.app.ux.container.uploadgroupfile.UploadGroupFileRoute
+import com.studyswap.mobile.app.ux.container.uploadgroupfile.UploadGroupFileScreen
 import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialRoute
 import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialScreen
+import com.studyswap.mobile.app.ux.container.mymaterials.MyMaterialsRoute
+import com.studyswap.mobile.app.ux.container.mymaterials.MyMaterialsScreen
 import com.studyswap.mobile.app.ux.main.home.HomeRoute
 import com.studyswap.mobile.app.ux.main.home.HomeScreen
 import com.studyswap.mobile.app.ux.main.groups.GroupsRoute
@@ -90,6 +94,15 @@ fun AppStartupGraph(
         }
         composable(UploadMaterialRoute.routeDefinition.value) {
             UploadMaterialScreen(navController = navController)
+        }
+        composable(
+            route = UploadGroupFileRoute.routeDefinition.value,
+            arguments = UploadGroupFileRoute.getArguments()
+        ) {
+            UploadGroupFileScreen(navController = navController)
+        }
+        composable(MyMaterialsRoute.routeDefinition.value) {
+            MyMaterialsScreen(navController = navController)
         }
         composable(
             route = MarketplaceItemDetailRoute.routeDefinition.value,

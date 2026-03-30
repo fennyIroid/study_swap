@@ -16,6 +16,7 @@ data class GroupData(
     @SerializedName("status") val status: String?,
     @SerializedName("last_activity_at") val lastActivityAt: String?,
     @SerializedName("invite_link") val inviteLink: String?,
+    @SerializedName("invitation_code") val invitationCode: String? = null,
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("deleted_at") val deletedAt: String?
 )
@@ -23,6 +24,17 @@ data class GroupData(
 data class GetGroupsResponse(
     @SerializedName("status") val status: String?,
     @SerializedName("data") val data: List<GroupData>?
+)
+
+data class MyGroupsBuckets(
+    @SerializedName("joined") val joined: List<GroupData>? = null,
+    @SerializedName("pending") val pending: List<GroupData>? = null,
+    @SerializedName("left") val left: List<GroupData>? = null
+)
+
+data class MyGroupsResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("data") val data: MyGroupsBuckets?
 )
 
 // Detailed group response ----------------------------------------------------
@@ -56,4 +68,24 @@ data class GetGroupDetailsResponse(
 data class GenerateInviteLinkResponse(
     @SerializedName("status") val status: String?,
     @SerializedName("data") val data: GroupData?
+)
+
+data class GroupMutationResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: GroupData? = null
+)
+
+data class GroupUploadRow(
+    @SerializedName("id") val id: Int? = null,
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("category") val category: String? = null,
+    @SerializedName("file_url") val fileUrl: String? = null,
+    @SerializedName("thumbnail_url") val thumbnailUrl: String? = null
+)
+
+data class GroupUploadResponse(
+    @SerializedName("status") val status: String?,
+    @SerializedName("message") val message: String? = null,
+    @SerializedName("data") val data: GroupUploadRow? = null
 )

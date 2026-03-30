@@ -10,10 +10,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -24,10 +20,11 @@ import com.studyswap.mobile.app.ui.theme.PrimaryOlive
 
 @Composable
 fun FilterChips(
+    selectedFilter: String,
+    onFilterSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val filters = listOf("All Groups", "My Groups", "Discover")
-    var selectedFilter by remember { mutableStateOf(filters[0]) }
 
     LazyRow(
         modifier = modifier.fillMaxWidth(),
@@ -38,7 +35,7 @@ fun FilterChips(
             val isSelected = filter == selectedFilter
             FilterChip(
                 selected = isSelected,
-                onClick = { selectedFilter = filter },
+                onClick = { onFilterSelected(filter) },
                 label = { 
                     Text(
                         text = filter,
@@ -67,5 +64,5 @@ fun FilterChips(
 @Preview
 @Composable
 fun FilterChipsPreview() {
-    FilterChips()
+    FilterChips(selectedFilter = "All Groups", onFilterSelected = {})
 }

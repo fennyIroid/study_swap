@@ -1,5 +1,6 @@
 package com.studyswap.mobile.app.ux.container.groupdetails
 
+import android.net.Uri
 import com.studyswap.mobile.app.data.source.remote.model.GroupData
 import kotlinx.coroutines.flow.StateFlow
 
@@ -66,6 +67,7 @@ sealed class GroupDetailsUiEvent {
     object OnSortChange : GroupDetailsUiEvent()
     data class OnDownloadMaterial(val material: MaterialItem) : GroupDetailsUiEvent()
     object OnAddMaterialClick : GroupDetailsUiEvent()
+    data class OnGroupIconPicked(val uri: Uri) : GroupDetailsUiEvent()
     object LoadGroupDetails : GroupDetailsUiEvent()
     data class OnSettingsChanged(val settings: GroupSettingsUi) : GroupDetailsUiEvent()
     data class OnMemberRoleChange(val member: GroupMemberUi, val newRole: String) : GroupDetailsUiEvent()

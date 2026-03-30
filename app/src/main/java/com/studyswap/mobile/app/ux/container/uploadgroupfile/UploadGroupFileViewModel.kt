@@ -1,4 +1,4 @@
-package com.studyswap.mobile.app.ux.container.marketplaceitemdetail
+package com.studyswap.mobile.app.ux.container.uploadgroupfile
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
@@ -11,17 +11,17 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 @HiltViewModel
-class MarketplaceItemDetailViewModel @Inject constructor(
-    private val getMarketplaceItemDetailUiStateUseCase: GetMarketplaceItemDetailUiStateUseCase,
+class UploadGroupFileViewModel @Inject constructor(
+    private val getUploadGroupFileUiStateUseCase: GetUploadGroupFileUiStateUseCase,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel(), ViewModelNav by ViewModelNavImpl() {
 
-    private val itemId: String = savedStateHandle.get<String>("itemId") ?: ""
+    private val groupId: String = savedStateHandle.get<String>("groupId") ?: "0"
 
-    val uiState: MarketplaceItemDetailUiState = getMarketplaceItemDetailUiStateUseCase(
-        itemId = itemId,
+    val uiState: UploadGroupFileUiState = getUploadGroupFileUiStateUseCase(
         context = context,
+        groupId = groupId,
         coroutineScope = viewModelScope
     ) { navigate(it) }
 }

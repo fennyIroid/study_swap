@@ -1,5 +1,8 @@
 package com.studyswap.mobile.app.ux.container.groupdetails
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +49,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -82,18 +86,29 @@ fun GroupDetailsScreen(
     val uiState by viewModel.uiState.uiDataStateFlow.collectAsStateWithLifecycle()
     val event = viewModel.uiState.event
 
-    LaunchedEffect(Unit) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         event(GroupDetailsUiEvent.LoadGroupDetails)
     }
 
-    GroupDetailsContent(uiState = uiState, event = event)
+    val groupIconPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { event(GroupDetailsUiEvent.OnGroupIconPicked(it)) }
+    }
+
+    GroupDetailsContent(
+        uiState = uiState,
+        event = event,
+        onPickGroupIcon = { groupIconPicker.launch("image/*") }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroupDetailsContent(
     uiState: GroupDetailsUiDataState,
-    event: (GroupDetailsUiEvent) -> Unit
+    event: (GroupDetailsUiEvent) -> Unit,
+    onPickGroupIcon: () -> Unit
 ) {
     val scrollState = rememberScrollState()
     val filteredMaterials = remember(
@@ -144,14 +159,16 @@ private fun GroupDetailsContent(
         },
         containerColor = BackgroundOffWhite,
         floatingActionButton = {
-            if (uiState.isAdmin) {
+            val canUpload =
+                uiState.group != null && (uiState.settings?.allowFileShare != false)
+            if (canUpload) {
                 FloatingActionButton(
                     onClick = { event(GroupDetailsUiEvent.OnAddMaterialClick) },
                     containerColor = PrimaryOlive,
                     contentColor = Color.White,
                     shape = CircleShape
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add material")
+                    Icon(Icons.Default.Add, contentDescription = "Add group file")
                 }
             }
         }
@@ -178,7 +195,8 @@ private fun GroupDetailsContent(
                         group = group,
                         memberCount = uiState.memberCount,
                         isAdmin = uiState.isAdmin,
-                        badgeCount = 9
+                        badgeCount = 9,
+                        onChangeGroupIcon = if (uiState.isAdmin) onPickGroupIcon else null
                     )
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -257,7 +275,8 @@ private fun GroupHeaderSection(
     group: GroupData,
     memberCount: Int,
     isAdmin: Boolean,
-    badgeCount: Int
+    badgeCount: Int,
+    onChangeGroupIcon: (() -> Unit)? = null
 ) {
     val iconColor = when ((group.id ?: 0) % 3) {
         0 -> PrimaryOlive
@@ -270,7 +289,14 @@ private fun GroupHeaderSection(
         Box(
             modifier = Modifier
                 .size(88.dp)
-                .clip(RoundedCornerShape(24.dp)),
+                .clip(RoundedCornerShape(24.dp))
+                .then(
+                    if (onChangeGroupIcon != null) {
+                        Modifier.clickable(onClick = onChangeGroupIcon)
+                    } else {
+                        Modifier
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             val iconUrl = group.groupIcon
@@ -320,6 +346,14 @@ private fun GroupHeaderSection(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+        if (onChangeGroupIcon != null) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Tap icon to change",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextMutedGray
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
@@ -936,6 +970,7 @@ private fun GroupDetailsScreenPreview() {
         status = "active",
         lastActivityAt = null,
         inviteLink = null,
+        invitationCode = null,
         createdAt = null,
         deletedAt = null
     )
@@ -974,7 +1009,8 @@ private fun GroupDetailsScreenPreview() {
     StudySwapTheme {
         GroupDetailsContent(
             uiState = previewState,
-            event = {}
+            event = {},
+            onPickGroupIcon = {}
         )
     }
 }

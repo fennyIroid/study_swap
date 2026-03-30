@@ -1,4 +1,4 @@
-package com.studyswap.mobile.app.ux.container.uploadmaterial
+package com.studyswap.mobile.app.ux.container.uploadgroupfile
 
 import android.content.Context
 import android.net.Uri
@@ -12,97 +12,81 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class GetUploadMaterialUiStateUseCase @Inject constructor(
+class GetUploadGroupFileUiStateUseCase @Inject constructor(
     private val apiRepository: ApiRepository
 ) {
 
-    private val _uiDataStateFlow = MutableStateFlow(UploadMaterialUiDataState())
+    private val _uiDataStateFlow = MutableStateFlow(UploadGroupFileUiDataState())
 
     operator fun invoke(
         context: Context,
+        groupId: String,
         coroutineScope: CoroutineScope,
         navigate: (NavigationAction) -> Unit
-    ): UploadMaterialUiState = UploadMaterialUiState(
+    ): UploadGroupFileUiState = UploadGroupFileUiState(
         uiDataStateFlow = _uiDataStateFlow,
-        event = { event -> handleEvent(context, event, coroutineScope, navigate) }
+        event = { event -> handleEvent(context, groupId, event, coroutineScope, navigate) }
     )
 
     private fun handleEvent(
         context: Context,
-        event: UploadMaterialUiEvent,
+        groupId: String,
+        event: UploadGroupFileUiEvent,
         coroutineScope: CoroutineScope,
         navigate: (NavigationAction) -> Unit
     ) {
         when (event) {
-            UploadMaterialUiEvent.Load -> coroutineScope.launch {
-                apiRepository.getCategories().collect { result ->
-                    when (result) {
-                        is NetworkResult.Success ->
-                            _uiDataStateFlow.update {
-                                it.copy(suggestedCategories = result.data?.data.orEmpty())
-                            }
-                        else -> Unit
-                    }
-                }
-            }
-            is UploadMaterialUiEvent.OnMaterialTitleChange ->
-                _uiDataStateFlow.update { it.copy(materialTitle = event.value) }
-            is UploadMaterialUiEvent.OnCategoryChange ->
+            is UploadGroupFileUiEvent.OnTitleChange ->
+                _uiDataStateFlow.update { it.copy(title = event.value) }
+            is UploadGroupFileUiEvent.OnCategoryChange ->
                 _uiDataStateFlow.update { it.copy(category = event.value) }
-            is UploadMaterialUiEvent.OnSuggestionPick ->
-                _uiDataStateFlow.update { it.copy(category = event.category) }
-            is UploadMaterialUiEvent.OnDescriptionChange ->
-                _uiDataStateFlow.update { it.copy(description = event.value) }
-            is UploadMaterialUiEvent.OnPriceChange ->
-                _uiDataStateFlow.update { it.copy(price = event.value.filter { c -> c.isDigit() || c == '.' }) }
-            is UploadMaterialUiEvent.OnFileSelected ->
+            is UploadGroupFileUiEvent.OnFileSelected ->
                 _uiDataStateFlow.update {
                     it.copy(selectedFileUri = event.uri, selectedFileName = event.fileName, errorMessage = null)
                 }
-            is UploadMaterialUiEvent.OnThumbnailSelected ->
+            is UploadGroupFileUiEvent.OnThumbnailSelected ->
                 _uiDataStateFlow.update {
                     it.copy(thumbnailUri = event.uri, thumbnailName = event.fileName)
                 }
-            UploadMaterialUiEvent.OnUploadClick -> {
+            UploadGroupFileUiEvent.OnUploadClick -> {
                 val state = _uiDataStateFlow.value
+                val idInt = groupId.toIntOrNull()
                 when {
-                    state.materialTitle.isBlank() ->
+                    idInt == null || idInt <= 0 ->
+                        _uiDataStateFlow.update { it.copy(errorMessage = "Invalid group") }
+                    state.title.isBlank() ->
                         _uiDataStateFlow.update { it.copy(errorMessage = "Title is required") }
                     state.category.isBlank() ->
                         _uiDataStateFlow.update { it.copy(errorMessage = "Category is required") }
-                    state.description.isBlank() ->
-                        _uiDataStateFlow.update { it.copy(errorMessage = "Description is required") }
                     state.selectedFileUri == null ->
                         _uiDataStateFlow.update { it.copy(errorMessage = "Please attach a file") }
-                    state.category.length > 100 ->
-                        _uiDataStateFlow.update { it.copy(errorMessage = "Category must be 100 characters or less") }
                     else -> coroutineScope.launch {
-                        upload(context, state, navigate)
+                        upload(context, idInt, state, navigate)
                     }
                 }
             }
-            UploadMaterialUiEvent.OnBackClick -> navigate(NavigationAction.Pop())
-            UploadMaterialUiEvent.OnDismissError ->
+            UploadGroupFileUiEvent.OnBackClick -> navigate(NavigationAction.Pop())
+            UploadGroupFileUiEvent.OnDismissError ->
                 _uiDataStateFlow.update { it.copy(errorMessage = null) }
         }
     }
 
     private suspend fun upload(
         context: Context,
-        state: UploadMaterialUiDataState,
+        groupId: Int,
+        state: UploadGroupFileUiDataState,
         navigate: (NavigationAction) -> Unit
     ) {
         val fileUri = state.selectedFileUri ?: return
         _uiDataStateFlow.update { it.copy(isLoading = true, errorMessage = null) }
         try {
             val filePart = fileUri.asMultipartPart(context, "file")
-            val thumbPart = state.thumbnailUri?.takeIf { it != Uri.EMPTY }?.asMultipartPart(context, "thumbnail")
-            val priceVal = state.price.toDoubleOrNull() ?: 0.0
-            apiRepository.uploadMaterial(
-                title = state.materialTitle.trim(),
-                description = state.description.trim(),
+            val thumbPart = state.thumbnailUri?.takeIf { it != Uri.EMPTY }
+                ?.asMultipartPart(context, "thumbnail")
+            apiRepository.uploadGroupFile(
+                groupId = groupId,
+                title = state.title.trim(),
                 category = state.category.trim(),
-                price = priceVal,
                 file = filePart,
                 thumbnail = thumbPart
             ).collect { result ->

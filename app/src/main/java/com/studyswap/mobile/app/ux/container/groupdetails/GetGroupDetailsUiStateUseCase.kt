@@ -3,10 +3,12 @@ package com.studyswap.mobile.app.ux.container.groupdetails
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import com.studyswap.mobile.app.data.source.remote.helper.NetworkResult
 import com.studyswap.mobile.app.data.source.remote.repository.ApiRepository
 import com.studyswap.mobile.app.navigation.NavigationAction
-import com.studyswap.mobile.app.ux.container.uploadmaterial.UploadMaterialRoute
+import com.studyswap.mobile.app.utils.asMultipartPart
+import com.studyswap.mobile.app.ux.container.uploadgroupfile.UploadGroupFileRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -98,8 +100,18 @@ class GetGroupDetailsUiStateUseCase @Inject constructor(
             is GroupDetailsUiEvent.OnSortChange ->
                 _uiDataStateFlow.update { it.copy(sortByLatest = !it.sortByLatest) }
             is GroupDetailsUiEvent.OnDownloadMaterial -> { /* TODO: download */ }
-            is GroupDetailsUiEvent.OnAddMaterialClick ->
-                navigate(NavigationAction.Navigate(UploadMaterialRoute.createRoute()))
+            is GroupDetailsUiEvent.OnAddMaterialClick -> {
+                val idInt = _uiDataStateFlow.value.group?.id ?: groupId.toIntOrNull() ?: return
+                navigate(NavigationAction.Navigate(UploadGroupFileRoute.createRoute(idInt)))
+            }
+            is GroupDetailsUiEvent.OnGroupIconPicked -> {
+                val current = _uiDataStateFlow.value
+                if (!current.isAdmin) return
+                val idInt = current.group?.id ?: return
+                coroutineScope.launch {
+                    updateGroupIcon(context, idInt, event.uri)
+                }
+            }
             is GroupDetailsUiEvent.OnSettingsChanged -> {
                 val current = _uiDataStateFlow.value
                 if (!current.isAdmin || current.group?.id == null) return
@@ -211,9 +223,10 @@ class GetGroupDetailsUiStateUseCase @Inject constructor(
 
                         val memberCount = members.size
                         val isAdmin = members.any { it.role.equals("admin", ignoreCase = true) }
-                        val joinCodeFromLink = group.inviteLink
-                            ?.substringAfterLast("/")
-                            ?.takeIf { it.isNotBlank() }
+                        val joinCodeFromLink = group.invitationCode?.takeIf { it.isNotBlank() }
+                            ?: group.inviteLink
+                                ?.substringAfterLast("/")
+                                ?.takeIf { it.isNotBlank() }
                             ?: ""
 
                         _uiDataStateFlow.update {
@@ -465,15 +478,15 @@ class GetGroupDetailsUiStateUseCase @Inject constructor(
                     val newInvite = groupFromResponse?.inviteLink
                     _uiDataStateFlow.update { current ->
                         val updatedGroup = current.group?.copy(
-                            inviteLink = newInvite ?: current.group.inviteLink
+                            inviteLink = newInvite ?: current.group.inviteLink,
+                            invitationCode = groupFromResponse?.invitationCode ?: current.group.invitationCode
                         )
+                        val newCode = groupFromResponse?.invitationCode?.takeIf { it.isNotBlank() }
+                            ?: newInvite?.substringAfterLast("/")?.takeIf { it.isNotBlank() }
                         current.copy(
                             isLoading = false,
                             group = updatedGroup,
-                            joinCode = newInvite
-                                ?.substringAfterLast("/")
-                                ?.takeIf { it.isNotBlank() }
-                                ?: current.joinCode
+                            joinCode = newCode ?: current.joinCode
                         )
                     }
                 }
@@ -487,6 +500,44 @@ class GetGroupDetailsUiStateUseCase @Inject constructor(
                         it.copy(isLoading = false, errorMessage = "Session expired")
                     }
                 }
+            }
+        }
+    }
+
+    private suspend fun updateGroupIcon(
+        context: Context,
+        groupIdInt: Int,
+        uri: Uri
+    ) {
+        try {
+            val part = uri.asMultipartPart(context, "group_icon")
+            apiRepository.updateGroupIcon(groupIdInt, part).collect { result ->
+                when (result) {
+                    is NetworkResult.Success -> {
+                        val updated = result.data?.data
+                        if (updated != null) {
+                            _uiDataStateFlow.update { state ->
+                                state.copy(
+                                    group = state.group?.copy(groupIcon = updated.groupIcon ?: state.group.groupIcon),
+                                    errorMessage = null
+                                )
+                            }
+                        } else {
+                            loadGroupDetails(groupIdInt.toString())
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        _uiDataStateFlow.update { it.copy(errorMessage = result.message) }
+                    }
+                    is NetworkResult.UnAuthenticated -> {
+                        _uiDataStateFlow.update { it.copy(errorMessage = "Please sign in again.") }
+                    }
+                    is NetworkResult.Loading -> Unit
+                }
+            }
+        } catch (e: Exception) {
+            _uiDataStateFlow.update {
+                it.copy(errorMessage = e.message ?: "Could not update group icon")
             }
         }
     }

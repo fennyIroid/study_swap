@@ -12,10 +12,12 @@ data class ProfileUiState(
 data class ProfileUiDataState(
     val userData: UserData? = null,
     val isLoading: Boolean = false,
+    val isUploadingPhoto: Boolean = false,
     val errorMessage: String? = null
 )
 
 sealed interface ProfileUiEvent {
+    data class OnProfilePhotoPicked(val uri: android.net.Uri) : ProfileUiEvent
     data object OnEditProfileClick : ProfileUiEvent
     data object OnUploadedMaterialsClick : ProfileUiEvent
     data object OnSavedMaterialsClick : ProfileUiEvent

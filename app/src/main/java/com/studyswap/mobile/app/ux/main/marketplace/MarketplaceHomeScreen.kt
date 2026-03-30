@@ -36,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -111,13 +112,38 @@ private fun MarketplaceHomeContent(
             item { Spacer(modifier = Modifier.height(12.dp)) }
 
             item {
-                CategoryChips(
+                CategoryChipsRow(
+                    apiCategories = uiState.apiCategories,
                     selected = uiState.selectedCategory,
                     onSelect = { event(MarketplaceHomeUiEvent.OnCategorySelected(it)) }
                 )
             }
 
             item { Spacer(modifier = Modifier.height(18.dp)) }
+
+            uiState.errorMessage?.let { err ->
+                item {
+                    Text(
+                        text = err,
+                        color = Color(0xFFB00020),
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
+                }
+            }
+
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryOlive, modifier = Modifier.size(32.dp))
+                    }
+                }
+            }
 
             item {
                 SectionHeader(
@@ -268,24 +294,51 @@ private fun SearchRow(value: String, onValueChange: (String) -> Unit) {
 }
 
 @Composable
-private fun CategoryChips(selected: MarketplaceCategory, onSelect: (MarketplaceCategory) -> Unit) {
-    val chips = listOf(
-        MarketplaceCategory.COMPUTER_SCIENCE to "Computer Science",
-        MarketplaceCategory.MATH to "Math",
-        MarketplaceCategory.HISTORY to "History"
-    )
+private fun CategoryChipsRow(
+    apiCategories: List<String>,
+    selected: String?,
+    onSelect: (String?) -> Unit
+) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(chips) { (cat, label) ->
+        item {
+            val allSelected = selected == null
+            FilterChip(
+                selected = allSelected,
+                onClick = { onSelect(null) },
+                label = {
+                    Text(
+                        text = "All",
+                        fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium
+                    )
+                },
+                shape = RoundedCornerShape(24.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.White,
+                    labelColor = TextMutedGray,
+                    selectedContainerColor = PrimaryOlive,
+                    selectedLabelColor = Color.White
+                ),
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = Color.Transparent,
+                    selectedBorderColor = Color.Transparent,
+                    enabled = true,
+                    selected = allSelected
+                )
+            )
+        }
+        items(apiCategories) { cat ->
             val isSelected = cat == selected
             FilterChip(
                 selected = isSelected,
                 onClick = { onSelect(cat) },
                 label = {
                     Text(
-                        text = label,
+                        text = cat,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                     )
                 },
@@ -475,7 +528,8 @@ private fun MarketplaceHomePreview() {
     val previewState = MarketplaceHomeUiDataState(
         userName = "Alex Student",
         searchQuery = "",
-        selectedCategory = MarketplaceCategory.COMPUTER_SCIENCE,
+        selectedCategory = null,
+        apiCategories = listOf("Computer Science", "Biology", "Economics"),
         trendingNotes = listOf(
             TrendingNoteItem(
                 id = "t1",

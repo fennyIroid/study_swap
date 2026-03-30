@@ -1,5 +1,7 @@
 package com.studyswap.mobile.app.ux.container.marketplaceitemdetail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,21 +27,28 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +72,7 @@ import com.studyswap.mobile.app.ui.theme.SecondaryPeach
 import com.studyswap.mobile.app.ui.theme.StudySwapTheme
 import com.studyswap.mobile.app.ui.theme.TextCharcoal
 import com.studyswap.mobile.app.ui.theme.TextMutedGray
+import com.studyswap.mobile.app.utils.formatCountdownSeconds
 
 @Composable
 fun MarketplaceItemDetailScreen(
@@ -87,6 +98,51 @@ private fun MarketplaceItemDetailContent(
     event: (MarketplaceItemDetailUiEvent) -> Unit
 ) {
     val item = uiState.item
+    val context = LocalContext.current
+    val otpDeadline = uiState.authorOtpDeadlineWallMs
+    var otpRemainSec by remember(otpDeadline) { mutableIntStateOf(0) }
+    LaunchedEffect(otpDeadline) {
+        if (otpDeadline == null) {
+            otpRemainSec = 0
+            return@LaunchedEffect
+        }
+        while (true) {
+            val r = ((otpDeadline - System.currentTimeMillis()) / 1000).toInt().coerceAtLeast(0)
+            otpRemainSec = r
+            if (r <= 0) break
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+    val otpExpired = uiState.authorOtpCode != null && otpDeadline != null && otpRemainSec <= 0
+
+    if (uiState.showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { event(MarketplaceItemDetailUiEvent.OnDismissDeleteConfirm) },
+            title = {
+                Text("Delete this material?", fontWeight = FontWeight.Bold, color = TextCharcoal)
+            },
+            text = {
+                Text(
+                    "This removes it from the marketplace. This cannot be undone.",
+                    color = TextMutedGray
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { event(MarketplaceItemDetailUiEvent.OnConfirmDelete) },
+                    enabled = !uiState.isDeleteLoading
+                ) {
+                    Text("Delete", color = Color(0xFFB00020), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { event(MarketplaceItemDetailUiEvent.OnDismissDeleteConfirm) }) {
+                    Text("Cancel", color = TextMutedGray)
+                }
+            },
+            containerColor = Color.White
+        )
+    }
 
     Scaffold(
         modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
@@ -271,11 +327,212 @@ private fun MarketplaceItemDetailContent(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (!uiState.isOwner && (!item?.authorEmail.isNullOrBlank() || !item?.authorPhone.isNullOrBlank())) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F9F4)),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Contact seller",
+                            fontWeight = FontWeight.Bold,
+                            color = TextCharcoal
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Pay the author directly, then they’ll share a 6-digit OTP to unlock this file.",
+                            color = TextMutedGray,
+                            fontSize = 13.sp
+                        )
+                        item?.authorEmail?.let { em ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = em,
+                                color = PrimaryOlive,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clickable {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$em")).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                        item?.authorPhone?.let { ph ->
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(text = ph, color = TextCharcoal, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+
+            if (uiState.isOwner) {
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = "Buyer unlock (OTP)",
+                    fontWeight = FontWeight.Bold,
+                    color = TextCharcoal
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { event(MarketplaceItemDetailUiEvent.OnGenerateOtp) },
+                    enabled = !uiState.isGeneratingOtp,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SecondaryPeach)
+                ) {
+                    if (uiState.isGeneratingOtp) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = if (uiState.authorOtpCode == null) "Generate OTP" else "Refresh OTP",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+                uiState.authorOtpCode?.let { code ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = code,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = PrimaryOlive,
+                        letterSpacing = 4.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = when {
+                            otpExpired -> "OTP expired — tap Refresh OTP for a new code."
+                            else -> "Expires in ${formatCountdownSeconds(otpRemainSec)}"
+                        },
+                        fontSize = 13.sp,
+                        color = if (otpExpired) Color(0xFFB00020) else TextMutedGray
+                    )
+                }
+            }
+
+            if (!uiState.isOwner && !uiState.fileAccessUnlocked) {
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = "Have an OTP?",
+                    fontWeight = FontWeight.Bold,
+                    color = TextCharcoal
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = uiState.buyerOtpInput,
+                    onValueChange = { event(MarketplaceItemDetailUiEvent.OnBuyerOtpChange(it)) },
+                    label = { Text("6-digit code") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryOlive,
+                        unfocusedBorderColor = TextMutedGray.copy(alpha = 0.4f)
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = { event(MarketplaceItemDetailUiEvent.OnRedeemOtp) },
+                    enabled = !uiState.isRedeeming && uiState.buyerOtpInput.length == 6,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOlive)
+                ) {
+                    if (uiState.isRedeeming) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Redeem OTP", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+
+            uiState.errorMessage?.let { err ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = err, color = Color(0xFFB00020), fontSize = 13.sp)
+            }
+
+            uiState.infoMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = msg, color = PrimaryOlive, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "OK",
+                        color = PrimaryOlive,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { event(MarketplaceItemDetailUiEvent.OnDismissInfo) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Rate this material",
+                fontWeight = FontWeight.Bold,
+                color = TextCharcoal
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (i in 1..5) {
+                    Text(
+                        text = "★",
+                        fontSize = 28.sp,
+                        color = SecondaryPeach,
+                        modifier = Modifier.clickable(enabled = !uiState.isRatingLoading && item?.numericId != 0) {
+                            event(MarketplaceItemDetailUiEvent.OnRateMaterial(i))
+                        }
+                    )
+                }
+            }
+            if (uiState.isRatingLoading) {
+                Spacer(modifier = Modifier.height(6.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = PrimaryOlive,
+                    strokeWidth = 2.dp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (uiState.isOwner) {
+                OutlinedButton(
+                    onClick = { event(MarketplaceItemDetailUiEvent.OnDeleteClick) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFB00020))
+                ) {
+                    Text("Delete listing", fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Button(
                 onClick = { event(MarketplaceItemDetailUiEvent.OnDownloadClick) },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOlive),
+                enabled = uiState.fileAccessUnlocked && !item?.fileUrl.isNullOrBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryOlive,
+                    disabledContainerColor = TextMutedGray.copy(alpha = 0.35f)
+                ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -283,7 +540,15 @@ private fun MarketplaceItemDetailContent(
             ) {
                 Icon(Icons.Default.Download, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(10.dp))
-                Text("Download Material", fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = when {
+                        item?.fileUrl.isNullOrBlank() -> "No file URL"
+                        !uiState.fileAccessUnlocked -> "Unlock with OTP to download"
+                        else -> "Open / download file"
+                    },
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -358,6 +623,7 @@ private fun MarketplaceItemDetailPreview() {
     val previewState = MarketplaceItemDetailUiDataState(
         item = MarketplaceItemDetail(
             id = "macro",
+            numericId = 1,
             title = "Intro to\nMacroeconomics Notes",
             authorName = "Sarah J.",
             authorSubtitle = "AUTHOR",
@@ -367,8 +633,13 @@ private fun MarketplaceItemDetailPreview() {
             description = "Comprehensive notes covering chapters 1–5 of the standard curriculum.\n\nThese notes include detailed graphs for supply and demand and clear worked examples.",
             formats = listOf(MarketplaceItemFormat.NOTES, MarketplaceItemFormat.PDF),
             coverUrl = null,
+            fileUrl = null,
             fileName = "Macro_Intro_Final.pdf",
-            fileMetaLine = "2.4 MB • 14 PAGES • HIGH RES"
+            fileMetaLine = "2.4 MB • 14 PAGES • HIGH RES",
+            ownerUserId = null,
+            authorEmail = "seller@example.com",
+            authorPhone = null,
+            hasAccessFromApi = false
         ),
         isBookmarked = false
     )
